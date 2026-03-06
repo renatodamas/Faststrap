@@ -1,6 +1,7 @@
 import pytest
 from fasthtml.common import FastHTML
 
+from faststrap.core import assets as assets_module
 from faststrap.core.assets import add_bootstrap
 from faststrap.core.theme import (
     Theme,
@@ -177,3 +178,19 @@ def test_no_font_when_not_specified():
     hdrs_str = [str(h) for h in app.hdrs]
     # Should not have Google Fonts link
     assert not any("fonts.googleapis.com" in s for s in hdrs_str)
+
+
+def test_add_bootstrap_cdn_fallback_preserves_font_configuration(monkeypatch):
+    """If local mounting fails, fallback CDN call should keep font settings."""
+    app = FastHTML()
+
+    monkeypatch.setattr(
+        assets_module, "get_static_path", lambda: (_ for _ in ()).throw(RuntimeError)
+    )
+    add_bootstrap(
+        app, use_cdn=False, mount_static=True, font_family="Inter", font_weights=[400, 600]
+    )
+
+    hdrs_str = [str(h) for h in app.hdrs]
+    assert any("fonts.googleapis.com" in s and "Inter" in s for s in hdrs_str)
+    assert any("wght@400;600" in s for s in hdrs_str)

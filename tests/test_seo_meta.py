@@ -16,10 +16,6 @@ class TestSEOBasicTags:
         assert len(titles) == 1
         assert str(titles[0]) == "<title>Test Page</title>"
 
-        # Should have meta title
-        meta_titles = [e for e in elements if e.tag == "meta" and e.attrs.get("name") == "title"]
-        assert len(meta_titles) == 1
-
     def test_description_tag(self):
         """Test description meta tag."""
         result = SEO(description="Test description")
@@ -114,12 +110,21 @@ class TestOpenGraphTags:
 
     def test_og_type_article(self):
         """Test Open Graph type set to article."""
-        result = SEO(title="Test", type="article")
+        result = SEO(title="Test", og_type="article")
         elements = list(result)
 
         og_type = [e for e in elements if e.tag == "meta" and e.attrs.get("property") == "og:type"]
         assert len(og_type) == 1
         assert og_type[0].attrs.get("content") == "article"
+
+    def test_legacy_type_alias_still_works(self):
+        """Legacy `type` kwarg should still map to Open Graph type."""
+        result = SEO(title="Test", type="product")
+        elements = list(result)
+
+        og_type = [e for e in elements if e.tag == "meta" and e.attrs.get("property") == "og:type"]
+        assert len(og_type) == 1
+        assert og_type[0].attrs.get("content") == "product"
 
     def test_og_locale(self):
         """Test Open Graph locale tags."""

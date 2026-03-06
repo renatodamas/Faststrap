@@ -103,10 +103,6 @@ def Input(
     # Create input element
     input_elem = FTInput(**attrs)
 
-    # If just input (no label/help), return input only
-    if not label and not help_text and not validation_message:
-        return input_elem
-
     # Wrap in div with label, help text, and validation message
     elements = []
 
@@ -131,4 +127,6 @@ def Input(
         feedback_elem = Div(validation_message, cls=feedback_cls)
         elements.append(feedback_elem)
 
-    return Div(*elements, cls="mb-3")
+    if label or help_text or validation_message:
+        return Div(*elements, cls="mb-3")
+    return Div(*elements)

@@ -6,6 +6,7 @@ Open Graph, Twitter Cards, and basic SEO meta tags.
 
 from __future__ import annotations
 
+import warnings
 from typing import Any, Literal
 
 from fasthtml.common import Link, Meta, Title
@@ -17,7 +18,7 @@ def SEO(
     keywords: list[str] | None = None,
     image: str | None = None,
     url: str | None = None,
-    type: Literal["website", "article", "product"] = "website",
+    og_type: Literal["website", "article", "product"] = "website",
     # Article-specific
     article: bool = False,
     published_time: str | None = None,
@@ -48,7 +49,7 @@ def SEO(
         keywords: List of keywords for meta keywords tag
         image: Image URL for social sharing (og:image, twitter:image)
         url: Canonical URL for the page (og:url)
-        type: Open Graph type (website, article, product)
+        og_type: Open Graph type (website, article, product)
         article: If True, adds article-specific meta tags
         published_time: Article published time (ISO 8601 format)
         modified_time: Article modified time (ISO 8601 format)
@@ -93,10 +94,19 @@ def SEO(
     """
     elements: list[Any] = []
 
+    legacy_type = kwargs.pop("type", None)
+    if legacy_type is not None:
+        warnings.warn(
+            "SEO(type=...) is deprecated; use SEO(og_type=...) instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        if og_type == "website":
+            og_type = legacy_type
+
     # Basic meta tags
     if title:
         elements.append(Title(title))
-        elements.append(Meta(name="title", content=title))
 
     if description:
         elements.append(Meta(name="description", content=description))
@@ -126,8 +136,8 @@ def SEO(
         elements.append(Meta(property="og:url", content=url))
 
     # Set type to article if article=True
-    og_type = "article" if article else type
-    elements.append(Meta(property="og:type", content=og_type))
+    resolved_og_type = "article" if article else og_type
+    elements.append(Meta(property="og:type", content=resolved_og_type))
 
     if locale:
         elements.append(Meta(property="og:locale", content=locale))
@@ -137,7 +147,7 @@ def SEO(
             elements.append(Meta(property="og:locale:alternate", content=alt_locale))
 
     # Article-specific tags
-    if article or og_type == "article":
+    if article or resolved_og_type == "article":
         if published_time:
             elements.append(Meta(property="article:published_time", content=published_time))
 

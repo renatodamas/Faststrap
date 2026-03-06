@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from fasthtml.common import Button, Div, Span
+from fasthtml.common import Button, Div
 
 from ...core.base import merge_classes
 from ...core.theme import resolve_defaults
@@ -75,7 +75,6 @@ def Alert(
     # Add close button if dismissible
     if c_dismissible:
         close_btn = Button(
-            Span("×", aria_hidden="true"),
             type="button",
             cls="btn-close",
             data_bs_dismiss="alert",

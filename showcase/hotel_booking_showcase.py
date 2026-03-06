@@ -455,7 +455,7 @@ def lazy_offers() -> Any:
                     Div(
                         Badge(badge, variant="danger", cls="mb-2"),
                         Strong(title, cls="d-block"),
-                        Button("Book Offer", variant="outline-danger", size="sm", cls="mt-2"),
+                        Button("Book Offer", variant="danger", outline=True, size="sm", cls="mt-2"),
                         cls="p-3",
                     ),
                     cls=f"border-0 shadow-sm h-100 {Fx.base} {Fx.fade_in} {Fx.hover_lift}",

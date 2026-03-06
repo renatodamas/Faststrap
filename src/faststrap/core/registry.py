@@ -2,12 +2,15 @@
 
 from __future__ import annotations
 
+import importlib
+import pkgutil
 import warnings
 from collections.abc import Callable
 from typing import Any, TypeVar
 
 # Global registry for component metadata
 _component_registry: dict[str, dict[str, Any]] = {}
+_autodiscovered = False
 
 F = TypeVar("F", bound=Callable[..., Any])
 
@@ -54,11 +57,13 @@ def register(
 
 def get_registry() -> dict[str, dict[str, Any]]:
     """Get copy of component registry."""
+    ensure_autodiscovered()
     return _component_registry.copy()
 
 
 def get_component(name: str) -> Callable[..., Any] | None:
     """Get component function by name."""
+    ensure_autodiscovered()
     return _component_registry.get(name, {}).get("func")
 
 
@@ -72,6 +77,8 @@ def list_components(category: str | None = None) -> list[str]:
         >>> list_components(category="feedback")
         ['Alert', 'Toast', 'Modal', 'Spinner']
     """
+    ensure_autodiscovered()
+
     if category is None:
         return list(_component_registry.keys())
 
@@ -80,9 +87,6 @@ def list_components(category: str | None = None) -> list[str]:
 
 def autodiscover() -> None:
     """Auto-discover and register all components."""
-    import importlib
-    import pkgutil
-
     try:
         from faststrap import components
 
@@ -114,5 +118,10 @@ def autodiscover() -> None:
         pass  # Components not yet installed
 
 
-# Call autodiscover when registry is imported
-autodiscover()
+def ensure_autodiscovered() -> None:
+    """Run component autodiscovery only once, on first registry access."""
+    global _autodiscovered
+    if _autodiscovered:
+        return
+    autodiscover()
+    _autodiscovered = True

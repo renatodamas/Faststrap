@@ -5,6 +5,7 @@ Server-side searchable dropdown using HTMX.
 
 import json
 from typing import Any
+from uuid import uuid4
 
 from fasthtml.common import A, Div, Input, Option, Select
 
@@ -74,11 +75,15 @@ def SearchableSelect(
                 User.name.ilike(f"%{q}%")
             ).limit(10).all()
 
-            options = [
-                Option(user.name, value=user.id)
+            return Div(*[
+                A(
+                    user.name,
+                    href="#",
+                    cls="list-group-item list-group-item-action",
+                    data_value=user.id,
+                )
                 for user in users
-            ]
-            return Div(*options, id="user-options")
+            ])
         ```
 
     Note:
@@ -101,12 +106,13 @@ def SearchableSelect(
 
     # Generate ID if not provided
     if select_id is None:
-        import uuid
-
-        select_id = f"searchable-select-{uuid.uuid4().hex[:8]}"
+        select_id = f"searchable-select-{uuid4().hex[:8]}"
 
     results_id = f"{select_id}-results"
     input_id = f"{select_id}-input"
+    safe_select_id = json.dumps(select_id)
+    safe_input_id = json.dumps(input_id)
+    safe_results_id = json.dumps(results_id)
 
     # Build input classes
     input_classes = ["form-control"]
@@ -139,7 +145,7 @@ def SearchableSelect(
                 data_value=value,
                 hx_on_click=(
                     "event.preventDefault();"
-                    f"const sel=document.getElementById('{select_id}');"
+                    f"const sel=document.getElementById({safe_select_id});"
                     "if(!sel){return;}"
                     "sel.innerHTML='';"
                     "const opt=document.createElement('option');"
@@ -147,9 +153,9 @@ def SearchableSelect(
                     f"opt.text={json.dumps(text)};"
                     "opt.selected=true;"
                     "sel.appendChild(opt);"
-                    f"const inp=document.getElementById('{input_id}');"
+                    f"const inp=document.getElementById({safe_input_id});"
                     f"if(inp){{inp.value={json.dumps(text)};}}"
-                    f"const box=document.getElementById('{results_id}');"
+                    f"const box=document.getElementById({safe_results_id});"
                     "if(box){box.innerHTML='';}"
                 ),
             )

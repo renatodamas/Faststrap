@@ -1,5 +1,6 @@
 """Tests for Toast components."""
 
+import pytest
 from fasthtml.common import to_xml
 
 from faststrap.components.feedback import SimpleToast, Toast, ToastContainer
@@ -169,7 +170,22 @@ def test_simple_toast_position():
 
 def test_simple_toast_custom_duration():
     """SimpleToast supports custom auto-hide animation duration."""
-    toast = SimpleToast("Body", duration=3)
+    toast = SimpleToast("Body", duration=3000)
     html = to_xml(toast)
 
-    assert "toastFadeOut 3s" in html
+    assert "toastFadeOut 3.0s" in html
+
+
+def test_simple_toast_bootstrap_position_alias():
+    """SimpleToast accepts Bootstrap-style position aliases."""
+    toast = SimpleToast("Body", position="top-end")
+    html = to_xml(toast)
+
+    assert "top-0" in html
+    assert "end-0" in html
+
+
+def test_toast_container_rejects_conflicting_id():
+    """ToastContainer should reject conflicting id and container_id values."""
+    with pytest.raises(ValueError):
+        ToastContainer(Toast("A"), container_id="x", id="y")

@@ -12,7 +12,7 @@ class Component(Protocol):
         ...
 
 
-class BaseComponent(ABC):
+class BaseComponent(Component, ABC):
     """Base class for stateful components with shared functionality.
 
     Note: Most Faststrap components are implemented as functions for simplicity.

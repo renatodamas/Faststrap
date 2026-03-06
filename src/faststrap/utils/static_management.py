@@ -1,6 +1,4 @@
-"""
-Docstring for faststrap.utils.static_management
-"""
+"""Static path extraction and URL helpers used by Faststrap asset mounting."""
 
 from __future__ import annotations
 
@@ -19,6 +17,8 @@ from fasthtml.common import Link
 _STATIC_LOCK = threading.Lock()
 _APP_STATIC_STACK: ExitStack | None = None
 _EXTRACTED_STATIC_PATH: Path | None = None
+_ATEXIT_REGISTERED = False
+_MAX_STATIC_URL_ATTEMPTS = 100
 
 
 def get_static_path() -> Path:
@@ -27,7 +27,7 @@ def get_static_path() -> Path:
     Returns a Path to the static directory. Uses ExitStack + as_file to
     ensure the extracted path remains valid while _APP_STATIC_STACK is live.
     """
-    global _APP_STATIC_STACK, _EXTRACTED_STATIC_PATH
+    global _APP_STATIC_STACK, _EXTRACTED_STATIC_PATH, _ATEXIT_REGISTERED
 
     if _EXTRACTED_STATIC_PATH is not None:
         return _EXTRACTED_STATIC_PATH
@@ -49,7 +49,9 @@ def get_static_path() -> Path:
             _EXTRACTED_STATIC_PATH = static_path
 
             # Also ensure cleanup at interpreter exit if not already
-            atexit.register(stack.close)
+            if not _ATEXIT_REGISTERED:
+                atexit.register(stack.close)
+                _ATEXIT_REGISTERED = True
 
             return static_path
 
@@ -105,14 +107,13 @@ def resolve_static_url(app: Any, preferred_url: str) -> str:
         return fallback_url
 
     # Last resort: append a counter
-    counter = 1
-    while True:
+    for counter in range(1, _MAX_STATIC_URL_ATTEMPTS + 1):
         numbered_url = f"{preferred_url}/faststrap-{counter}"
         if not is_mounted(app, numbered_url):
             return numbered_url
-        counter += 1
-        if counter > 10:  # Safety limit
-            raise RuntimeError(f"Could not find available static URL after {counter} attempts")
+    raise RuntimeError(
+        f"Could not find available static URL after {_MAX_STATIC_URL_ATTEMPTS} attempts"
+    )
 
 
 def get_faststrap_static_url(app: Any) -> str | None:
@@ -131,13 +132,14 @@ def get_faststrap_static_url(app: Any) -> str | None:
 # Cleanup helper (useful for tests)
 def cleanup_static_resources() -> None:
     """Clean up extracted static resources."""
-    global _APP_STATIC_STACK, _EXTRACTED_STATIC_PATH
+    global _APP_STATIC_STACK, _EXTRACTED_STATIC_PATH, _ATEXIT_REGISTERED
     if _APP_STATIC_STACK:
         try:
             _APP_STATIC_STACK.close()
         finally:
             _APP_STATIC_STACK = None
             _EXTRACTED_STATIC_PATH = None
+            _ATEXIT_REGISTERED = False
 
 
 def create_favicon_links(favicon_url: str) -> list[Any]:

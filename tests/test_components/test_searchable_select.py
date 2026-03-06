@@ -123,3 +123,18 @@ def test_searchable_select_initial_options_wire_click_handler():
 
     assert "hx-on-click" in html
     assert "user-select" in html
+
+
+def test_searchable_select_escapes_user_supplied_select_id_in_js():
+    """User-provided select_id should be safely escaped in click handler JavaScript."""
+    select = SearchableSelect(
+        endpoint="/api/search",
+        name="user_id",
+        select_id="x');alert(1);//",
+        initial_options=[("1", "Alice")],
+    )
+    html = to_xml(select)
+
+    assert "alert(1)" in html  # still present as data, but escaped in string literal
+    assert 'getElementById("x&#39;);alert(1);//")' in html
+    assert "getElementById('x');alert(1);//')" not in html

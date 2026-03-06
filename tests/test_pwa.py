@@ -19,6 +19,8 @@ def test_pwa_meta_generation():
     )
     assert any(t.tag == "link" and t.attrs.get("rel") == "manifest" for t in tags)
     assert any(t.tag == "link" and t.attrs.get("rel") == "apple-touch-icon" for t in tags)
+    viewport = next(t for t in tags if t.tag == "meta" and t.attrs.get("name") == "viewport")
+    assert viewport.attrs.get("content") == "width=device-width, initial-scale=1"
 
 
 def test_add_pwa_injection():
@@ -113,3 +115,18 @@ def test_service_worker_accepts_cache_and_precache_configuration():
     assert 'const CACHE_NAME = "myapp-cache-v2026-02-23";' in sw
     assert '"/health"' in sw
     assert '"/assets/logo.png"' in sw
+
+
+def test_add_pwa_scope_uses_scoped_routes_and_registration():
+    """Scope should drive manifest/sw/offline paths and registration script."""
+    app = FastHTML()
+    add_pwa(app, scope="/myapp/")
+
+    route_paths = [r.path for r in app.routes]
+    assert "/myapp/manifest.json" in route_paths
+    assert "/myapp/sw.js" in route_paths
+    assert "/myapp/offline" in route_paths
+
+    script_text = "".join(str(h) for h in app.hdrs if getattr(h, "tag", "") == "script")
+    assert "register('/myapp/sw.js'" in script_text
+    assert "scope: '/myapp/'" in script_text

@@ -169,10 +169,7 @@ def Button(
 
     # Loading: optionally override/augment text
     if loading and loading_text is not None:
-        if content:
-            content = [*content]  # keep existing
-        else:
-            content = [loading_text]
+        content = [loading_text]
 
     # Spinner
     if loading and spinner:

@@ -9,6 +9,7 @@ This module provides:
 
 from __future__ import annotations
 
+import warnings
 from typing import Any, Literal
 
 from fasthtml.common import Style
@@ -236,6 +237,7 @@ class Theme:
             variables: CSS variable definitions for colors (primary, secondary, etc.)
         """
         self.variables = variables
+        self._style_cache: dict[ModeType, Style] = {}
 
     def _get_mode_vars(self, mode: Literal["light", "dark"]) -> dict[str, str]:
         """Get CSS variables for a specific mode."""
@@ -265,6 +267,10 @@ class Theme:
         Returns:
             FastHTML Style element with CSS variables
         """
+        cached = self._style_cache.get(mode)
+        if cached is not None:
+            return cached
+
         light_vars = self._get_mode_vars("light")
         dark_vars = self._get_mode_vars("dark")
 
@@ -310,7 +316,9 @@ class Theme:
 .progress-bar {{ background-color: var(--bs-primary); }}
 .spinner-border.text-primary, .spinner-grow.text-primary {{ color: var(--bs-primary) !important; }}
 """
-        return Style(css_content.strip())
+        style = Style(css_content.strip())
+        self._style_cache[mode] = style
+        return style
 
     def to_dict(self) -> dict[str, str]:
         """Return theme color variables as dict."""
@@ -443,7 +451,7 @@ _DEFAULT_COMPONENT_DEFAULTS: dict[str, dict[str, Any]] = {
     "Drawer": {"placement": "start", "backdrop": True},
     "Dropdown": {"variant": "primary", "direction": "down"},
     "Input": {"size": None, "input_type": "text"},
-    "Modal": {"size": None, "centered": False, "scrollable": False},
+    "Modal": {"size": None, "centered": False, "scrollable": False, "fade": True},
     "Navbar": {"expand": "lg", "color_scheme": "light"},
     "Pagination": {"size": None, "align": "start"},
     "Progress": {"variant": "primary", "striped": False, "animated": False},
@@ -457,6 +465,8 @@ _DEFAULT_COMPONENT_DEFAULTS: dict[str, dict[str, Any]] = {
 _COMPONENT_DEFAULTS: dict[str, dict[str, Any]] = {
     k: v.copy() for k, v in _DEFAULT_COMPONENT_DEFAULTS.items()
 }
+_COMPONENT_DEFAULTS_LOCKED = False
+_COMPONENT_DEFAULTS_WARNED = False
 
 
 def get_component_defaults(component: str) -> dict[str, Any]:
@@ -474,6 +484,9 @@ def get_component_defaults(component: str) -> dict[str, Any]:
 def set_component_defaults(component: str, **defaults: Any) -> None:
     """Set default values for a component globally.
 
+    This updates process-global state shared by all requests.
+    Configure defaults during application startup.
+
     Args:
         component: Component name (e.g., "Button")
         **defaults: Default values to set
@@ -482,6 +495,17 @@ def set_component_defaults(component: str, **defaults: Any) -> None:
         >>> set_component_defaults("Button", variant="outline-primary", size="sm")
         >>> # Now all Button() calls use these defaults unless overridden
     """
+    global _COMPONENT_DEFAULTS_WARNED
+
+    if _COMPONENT_DEFAULTS_LOCKED and not _COMPONENT_DEFAULTS_WARNED:
+        warnings.warn(
+            "set_component_defaults() updates process-global state. "
+            "Prefer calling it during application startup before handling requests.",
+            RuntimeWarning,
+            stacklevel=2,
+        )
+        _COMPONENT_DEFAULTS_WARNED = True
+
     if component not in _COMPONENT_DEFAULTS:
         _COMPONENT_DEFAULTS[component] = {}
     _COMPONENT_DEFAULTS[component].update(defaults)
@@ -493,11 +517,13 @@ def reset_component_defaults(component: str | None = None) -> None:
     Args:
         component: Component name to reset, or None to reset all
     """
-    global _COMPONENT_DEFAULTS
+    global _COMPONENT_DEFAULTS, _COMPONENT_DEFAULTS_LOCKED, _COMPONENT_DEFAULTS_WARNED
 
     if component is None:
         # Reset all components to original defaults
         _COMPONENT_DEFAULTS = {k: v.copy() for k, v in _DEFAULT_COMPONENT_DEFAULTS.items()}
+        _COMPONENT_DEFAULTS_LOCKED = False
+        _COMPONENT_DEFAULTS_WARNED = False
     elif component in _DEFAULT_COMPONENT_DEFAULTS:
         # Reset specific component to original default
         _COMPONENT_DEFAULTS[component] = _DEFAULT_COMPONENT_DEFAULTS[component].copy()
@@ -522,6 +548,9 @@ def resolve_defaults(component: str, **kwargs: Any) -> dict[str, Any]:
         >>> resolve_defaults("Button", variant=None, size="lg")
         {"variant": "secondary", "size": "lg"}
     """
+    global _COMPONENT_DEFAULTS_LOCKED
+    _COMPONENT_DEFAULTS_LOCKED = True
+
     defaults = get_component_defaults(component)
     resolved = defaults.copy()
 

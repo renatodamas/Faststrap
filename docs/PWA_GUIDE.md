@@ -8,6 +8,9 @@ Faststrap provides a production-safe PWA baseline through `add_pwa()`:
 - Offline fallback route (`/offline`)
 - Runtime caching for better resilience
 
+Accessibility note:
+- Faststrap keeps mobile zoom enabled by default (`width=device-width, initial-scale=1`).
+
 ## Quick Start
 
 ```python
@@ -33,6 +36,7 @@ add_pwa(
 3. Serves a robust service worker script at `/sw.js`.
 4. Injects service worker registration code into app headers.
 5. Serves `/offline` page (enabled by default).
+6. Respects `scope` for scoped deployments (for example `/myapp/sw.js`).
 
 ## Default Offline/Caching Strategy
 

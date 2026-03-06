@@ -4,6 +4,8 @@ Inspired by the uploaded furniture reference layout.
 Built fully with Faststrap + FastHTML components.
 """
 
+from typing import Any
+
 from fasthtml.common import (
     H1,
     H2,
@@ -131,7 +133,7 @@ body { background: #f3f3f3; }
 """
 
 
-def product_card(name: str, price: str, image: str):
+def product_card(name: str, price: str, image: str) -> Any:
     return Card(
         Img(src=image, cls="w-100 object-fit-cover rounded-top", style="height:180px;"),
         Div(
@@ -144,7 +146,7 @@ def product_card(name: str, price: str, image: str):
 
 
 @app.get("/")
-def home():
+def home() -> Any:
     return Div(
         Style(SHOWCASE_CSS),
         Container(
@@ -164,7 +166,9 @@ def home():
                                 cls="navbar-nav me-auto mb-2 mb-lg-0",
                             ),
                             Div(
-                                Button("Login", variant="outline-dark", size="sm", cls="me-2"),
+                                Button(
+                                    "Login", variant="dark", outline=True, size="sm", cls="me-2"
+                                ),
                                 Button("Sign Up", variant="dark", size="sm"),
                                 cls="d-flex align-items-center",
                             ),
@@ -205,7 +209,7 @@ def home():
                                         variant="warning",
                                         cls="text-dark fw-bold me-2",
                                     ),
-                                    Button("Request Quote", variant="outline-light"),
+                                    Button("Request Quote", variant="light", outline=True),
                                     cls="mt-4",
                                 ),
                                 cls="p-5",
@@ -314,7 +318,9 @@ def home():
                         ],
                         cls="g-3",
                     ),
-                    Div(Button("All Products", variant="outline-dark"), cls="text-center mt-2"),
+                    Div(
+                        Button("All Products", variant="dark", outline=True), cls="text-center mt-2"
+                    ),
                     id="products",
                     cls="mt-5",
                 ),

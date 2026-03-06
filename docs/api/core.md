@@ -35,6 +35,11 @@ This section provides automatically generated documentation from the FastStrap s
 
 ## Theme System
 
+Notes:
+- `add_bootstrap()` supports `font_family` and `font_weights` for Google Fonts injection.
+- `set_component_defaults()` modifies process-global defaults. Configure it at application startup.
+- `BaseComponent` / `Component` are extension points for third-party class-based components; built-ins remain function-based.
+
 ::: faststrap.core.theme.create_theme
     options:
         show_root_heading: true

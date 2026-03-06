@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import warnings
 from typing import Any
 
 from fasthtml.common import Button, Div, Strong
@@ -25,7 +26,7 @@ def SimpleToast(
     cfg = resolve_defaults("SimpleToast", variant=variant, duration=duration, position=position)
 
     c_variant = cfg.get("variant", "info")
-    c_duration = cfg.get("duration", 5)
+    c_duration = cfg.get("duration", 5000)
     c_position = cfg.get("position", "top-right")
 
     # Build base classes
@@ -39,6 +40,10 @@ def SimpleToast(
         "bottom-left": "position-fixed bottom-0 start-0 m-3",
         "top-center": "position-fixed top-0 start-50 translate-middle-x m-3",
         "bottom-center": "position-fixed bottom-0 start-50 translate-middle-x m-3",
+        "top-start": "position-fixed top-0 start-0 m-3",
+        "top-end": "position-fixed top-0 end-0 m-3",
+        "bottom-start": "position-fixed bottom-0 start-0 m-3",
+        "bottom-end": "position-fixed bottom-0 end-0 m-3",
     }
 
     classes.append(position_classes.get(c_position, position_classes["top-right"]))
@@ -56,7 +61,21 @@ def SimpleToast(
 
     # Add CSS for auto-hide
     if c_duration > 0:
-        style = f"animation: toastFadeOut {c_duration}s ease-in-out {c_duration}s forwards;"
+        duration_ms = int(c_duration)
+        # Backward compatibility: historical API used seconds.
+        if duration_ms <= 50:
+            warnings.warn(
+                "SimpleToast(duration=...) now expects milliseconds; "
+                "values <= 50 are treated as seconds for compatibility.",
+                DeprecationWarning,
+                stacklevel=2,
+            )
+            duration_ms *= 1000
+        duration_seconds = duration_ms / 1000
+        style = (
+            f"animation: toastFadeOut {duration_seconds}s ease-in-out "
+            f"{duration_seconds}s forwards;"
+        )
         existing_style = attrs.get("style", "")
         if existing_style:
             attrs["style"] = f"{existing_style}; {style}"
@@ -73,11 +92,9 @@ def SimpleToast(
         header = Div(
             Strong(title, cls="me-auto"),
             Button(
-                "×",
                 type="button",
                 cls="btn-close",
                 aria_label="Close",
-                **{k: v for k, v in attrs.items() if k not in ["cls", "role", "style"]},
             ),
             cls="alert-heading",
         )
@@ -194,7 +211,12 @@ def ToastContainer(
     all_classes = merge_classes(" ".join(classes), user_cls)
 
     # Build attributes
-    container_id = kwargs.pop("id", container_id)
+    explicit_id = kwargs.pop("id", None)
+    if explicit_id is not None and explicit_id != container_id:
+        raise ValueError(
+            "ToastContainer received both container_id and id with different values; "
+            "use container_id only."
+        )
     attrs: dict[str, Any] = {"cls": all_classes, "id": container_id}
     attrs.update(convert_attrs(kwargs))
 

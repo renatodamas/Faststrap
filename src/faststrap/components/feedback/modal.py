@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from typing import Any, Literal
+from uuid import uuid4
 
 from fasthtml.common import H5, Div
 
@@ -86,8 +87,6 @@ def Modal(
 
     # Ensure modal id
     if modal_id is None:
-        from uuid import uuid4
-
         modal_id = f"modal-{uuid4().hex}"
 
     # Build modal dialog classes

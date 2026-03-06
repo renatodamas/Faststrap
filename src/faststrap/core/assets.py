@@ -5,12 +5,16 @@ Safe for multi-worker servers, thread-safe, with graceful fallbacks.
 
 from __future__ import annotations
 
+import os
+import sys
 import warnings
 from os import environ
+from pathlib import Path
 from typing import Any
 from urllib.parse import quote
 
 from fasthtml.common import Link, Script, Style
+from starlette.routing import Mount
 from starlette.staticfiles import StaticFiles
 
 from ..utils.static_management import (
@@ -356,11 +360,6 @@ def add_bootstrap(
         # CDN mode for production
         add_bootstrap(app, theme="blue-ocean", mode="auto", use_cdn=True)
     """
-    # Clean up any previous FastStrap state on this app
-    if hasattr(app, "_faststrap_static_url"):
-        # We don't delete it anymore if it's already there to avoid re-mounting
-        pass
-
     if use_cdn is None:
         use_cdn = environ.get("FASTSTRAP_USE_CDN", "false").lower() == "true"
 
@@ -420,8 +419,6 @@ def add_bootstrap(
         try:
             static_path = get_static_path()
             # Use insert(0) to ensure static route takes precedence over catch-all routes (like fast_app's /{path})
-            from starlette.routing import Mount
-
             app.routes.insert(
                 0,
                 Mount(
@@ -456,6 +453,8 @@ def add_bootstrap(
                     mount_static=False,
                     include_favicon=include_favicon,
                     favicon_url=favicon_url,
+                    font_family=font_family,
+                    font_weights=font_weights,
                 )
 
     return app
@@ -516,12 +515,6 @@ def mount_assets(
         >>> add_bootstrap(app, static_url="/faststrap-static")
         >>> mount_assets(app, "static", url_path="/static")  # Now safe!
     """
-    import os
-    import sys
-    from pathlib import Path
-
-    from starlette.routing import Mount
-
     # Validate url_path
     if not url_path.startswith("/"):
         raise ValueError(f"url_path must start with '/'. Got: {url_path}")

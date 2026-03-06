@@ -5,7 +5,7 @@ Centered auth page layout with branding, card, and footer.
 
 from typing import Any
 
-from fasthtml.common import H1, Div, Form, Img, P
+from fasthtml.common import H1, A, Div, Form, Img, P
 
 from ..components.display.card import Card
 from ..components.layout.grid import Container
@@ -50,8 +50,8 @@ def AuthLayout(
     Example:
         Login page:
         >>> AuthLayout(
-        ...     FormGroup(Input(name="email", type="email"), label="Email"),
-        ...     FormGroup(Input(name="password", type="password"), label="Password"),
+        ...     FormGroup(Input(name="email", input_type="email"), label="Email"),
+        ...     FormGroup(Input(name="password", input_type="password"), label="Password"),
         ...     Button("Sign In", type="submit", variant="primary", cls="w-100"),
         ...     title="Welcome Back",
         ...     subtitle="Sign in to your account",
@@ -64,8 +64,8 @@ def AuthLayout(
         Register page:
         >>> AuthLayout(
         ...     Input(name="name", placeholder="Full Name"),
-        ...     Input(name="email", type="email", placeholder="Email"),
-        ...     Input(name="password", type="password", placeholder="Password"),
+        ...     Input(name="email", input_type="email", placeholder="Email"),
+        ...     Input(name="password", input_type="password", placeholder="Password"),
         ...     Button("Create Account", type="submit"),
         ...     title="Get Started",
         ...     brand_name="MyApp",
@@ -89,8 +89,6 @@ def AuthLayout(
         The layout is responsive and centers vertically on the page.
         Form fields should include their own labels or use FormGroup.
     """
-    from fasthtml.common import A
-
     # Build header with logo/brand
     header_elements = []
 
@@ -104,7 +102,7 @@ def AuthLayout(
             )
         )
     elif brand_name:
-        header_elements.append(H1(brand_name, cls="h3 mb-4"))
+        header_elements.append(P(brand_name, cls="h3 mb-4"))
 
     header_elements.append(H1(title, cls="h4 mb-2"))
 

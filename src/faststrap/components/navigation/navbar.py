@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import itertools
 from typing import Any
 
 from fasthtml.common import A, Button, Div, Nav, Span
@@ -13,7 +14,7 @@ from ...core.types import ExpandType
 from ...utils.attrs import convert_attrs
 
 # Deterministic ID counter for navbar togglers
-_navbar_id_counter = 0
+_navbar_id_counter = itertools.count(1)
 
 
 def _get_next_navbar_id() -> str:
@@ -22,9 +23,7 @@ def _get_next_navbar_id() -> str:
     Returns:
         Unique navbar ID string (e.g., 'navbar1', 'navbar2', etc.)
     """
-    global _navbar_id_counter
-    _navbar_id_counter += 1
-    return f"navbar{_navbar_id_counter}"
+    return f"navbar{next(_navbar_id_counter)}"
 
 
 @stable
@@ -72,7 +71,12 @@ def Navbar(
 
     # Use color_scheme (with variant as fallback)
     # Priority: 1. explicit color_scheme, 2. explicit variant, 3. global default
-    c_scheme = color_scheme or variant or cfg.get("color_scheme") or cfg.get("variant", "light")
+    if color_scheme is not None:
+        c_scheme = color_scheme
+    elif variant is not None:
+        c_scheme = variant
+    else:
+        c_scheme = cfg.get("color_scheme") or cfg.get("variant", "light")
 
     c_bg = cfg.get("bg")
     c_expand = expand if expand is not None else cfg.get("expand", "lg")

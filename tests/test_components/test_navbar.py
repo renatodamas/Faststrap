@@ -1,8 +1,11 @@
 """Tests for Navbar component."""
 
+from concurrent.futures import ThreadPoolExecutor
+
 from fasthtml.common import A, to_xml
 
 from faststrap.components.navigation import Navbar
+from faststrap.components.navigation.navbar import _get_next_navbar_id
 
 
 def test_navbar_basic():
@@ -149,3 +152,10 @@ def test_navbar_full_configuration():
     assert "bg-primary" in html
     assert "navbar-expand-lg" in html
     assert "sticky-top" in html
+
+
+def test_navbar_id_generation_is_thread_safe_and_unique():
+    """Concurrent ID generation should not produce duplicates."""
+    with ThreadPoolExecutor(max_workers=8) as executor:
+        ids = list(executor.map(lambda _: _get_next_navbar_id(), range(200)))
+    assert len(ids) == len(set(ids))

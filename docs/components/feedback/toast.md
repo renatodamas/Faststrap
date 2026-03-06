@@ -109,6 +109,7 @@ def add_item():
 | `title` | `Any` | `.toast-header` | Optional header element/text. |
 | `autohide` | `bool` | `data-bs-autohide` | If `True`, closes automatically. |
 | `delay` | `int` | `data-bs-delay` | Duration in milliseconds before closing. |
+| `duration` (`SimpleToast`) | `int` | CSS animation delay | Duration in milliseconds before fade out. |
 | `position` | `str` | - | Location: `top-end`, `bottom-start`, etc. |
 
 ::: faststrap.components.feedback.toast.SimpleToast

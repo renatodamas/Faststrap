@@ -149,11 +149,12 @@ def test_input_data_attributes():
 
 
 def test_input_without_wrapper():
-    """Input without label/help returns just input."""
+    """Input without label/help still returns a wrapper Div for API consistency."""
     inp = Input("email", input_type="email")
     html = to_xml(inp)
 
-    assert "mb-3" not in html  # No wrapper div
+    assert html.strip().startswith("<div")
+    assert "mb-3" not in html
     assert "form-control" in html
 
 

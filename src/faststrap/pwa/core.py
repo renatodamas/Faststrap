@@ -7,22 +7,44 @@ from fasthtml.common import Link, Meta, Script, Title
 from starlette.responses import JSONResponse, Response
 
 from ..components.display.empty_state import EmptyState
+from ..core.assets import BOOTSTRAP_ICONS_VERSION, BOOTSTRAP_VERSION
 
-# SW Registration Script (Extracted for formatting)
-_SW_REGISTER_SCRIPT = """
-if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/sw.js')
+
+def _join_scope_path(scope: str, path: str) -> str:
+    """Join a deployment scope and absolute path into a scoped absolute URL."""
+    # Normalize route paths for scoped deployments (for example: /myapp/).
+    normalized_scope = _normalize_scope(scope)
+    relative_path = path.lstrip("/")
+    return f"{normalized_scope}{relative_path}" if normalized_scope != "/" else f"/{relative_path}"
+
+
+def _normalize_scope(scope: str) -> str:
+    """Normalize scope to '/prefix/' format."""
+    normalized_scope = (scope or "/").strip()
+    if not normalized_scope.startswith("/"):
+        normalized_scope = f"/{normalized_scope}"
+    if not normalized_scope.endswith("/"):
+        normalized_scope = f"{normalized_scope}/"
+    return normalized_scope
+
+
+def _build_sw_register_script(sw_path: str, scope: str) -> str:
+    """Build service worker registration script for the configured scope."""
+    return f"""
+if ('serviceWorker' in navigator) {{
+    window.addEventListener('load', () => {{
+        navigator.serviceWorker.register({sw_path!r}, {{ scope: {scope!r} }})
             .then(reg => console.log('SW registered!', reg))
             .catch(err => console.log('SW failed', err));
-    });
-}
+    }});
+}}
 """
 
+
 _DEFAULT_PRECACHE_URLS = (
-    "https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css",
-    "https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js",
-    "https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css",
+    f"https://cdn.jsdelivr.net/npm/bootstrap@{BOOTSTRAP_VERSION}/dist/css/bootstrap.min.css",
+    f"https://cdn.jsdelivr.net/npm/bootstrap@{BOOTSTRAP_VERSION}/dist/js/bootstrap.bundle.min.js",
+    f"https://cdn.jsdelivr.net/npm/bootstrap-icons@{BOOTSTRAP_ICONS_VERSION}/font/bootstrap-icons.min.css",
     "/static/css/faststrap-fx.css",
     "/static/css/faststrap-layouts.css",
 )
@@ -143,6 +165,7 @@ def PwaMeta(
     background_color: str = "#ffffff",
     description: str | None = None,
     icon_path: str = "/static/icon.png",  # Default path
+    manifest_path: str = "/manifest.json",
 ) -> tuple[Any, ...]:
     """
     Generate PWA meta tags and link elements.
@@ -159,6 +182,7 @@ def PwaMeta(
         background_color: Background color for splash screen
         description: Description of the app
         icon_path: Path to the main icon (should be square, ideally 512x512)
+        manifest_path: URL path to the manifest file
 
     Returns:
         Tuple of FastHTML Meta and Link elements
@@ -167,7 +191,7 @@ def PwaMeta(
         # Basic Mobile Meta
         Meta(
             name="viewport",
-            content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0",
+            content="width=device-width, initial-scale=1",
         ),
         Meta(name="theme-color", content=theme_color),
         Meta(name="mobile-web-app-capable", content="yes"),
@@ -180,7 +204,7 @@ def PwaMeta(
         Meta(name="msapplication-TileColor", content=theme_color),
         Meta(name="msapplication-TileImage", content=icon_path),
         # Manifest
-        Link(rel="manifest", href="/manifest.json"),
+        Link(rel="manifest", href=manifest_path),
     ]
 
     if description:
@@ -233,6 +257,11 @@ def add_pwa(
         pre_cache_urls: Optional extra URLs to precache (in addition to defaults)
     """
 
+    normalized_scope = _normalize_scope(scope)
+    manifest_path = _join_scope_path(normalized_scope, "/manifest.json")
+    sw_path = _join_scope_path(normalized_scope, "/sw.js")
+    offline_path = _join_scope_path(normalized_scope, "/offline")
+
     # 1. Inject Headers
     pwa_headers = PwaMeta(
         name=name,
@@ -241,6 +270,7 @@ def add_pwa(
         background_color=background_color,
         description=description,
         icon_path=icon_path,
+        manifest_path=manifest_path,
     )
 
     # Append to existing headers (similar logic to add_bootstrap)
@@ -271,7 +301,7 @@ def add_pwa(
         ],
     }
 
-    @app.get("/manifest.json")
+    @app.get(manifest_path)
     def manifest() -> Any:
         return JSONResponse(manifest_data)
 
@@ -279,34 +309,34 @@ def add_pwa(
     if service_worker:
         # Build robust service worker script with safe defaults and optional extension points.
         deduped_precache = list(
-            dict.fromkeys([*_DEFAULT_PRECACHE_URLS, *(pre_cache_urls or []), "/offline"])
+            dict.fromkeys([*_DEFAULT_PRECACHE_URLS, *(pre_cache_urls or []), offline_path])
         )
         sw_script = _render_sw_script(
             cache_name=cache_name,
             cache_version=cache_version,
             pre_cache_urls=deduped_precache,
-            offline_fallback_path="/offline",
+            offline_fallback_path=offline_path,
         )
 
-        @app.get("/sw.js")
+        @app.get(sw_path)
         def sw() -> Any:
             return Response(sw_script, media_type="application/javascript")
 
         # Register the SW in the app (inject script)
-        reg_script = Script(_SW_REGISTER_SCRIPT)
+        reg_script = Script(_build_sw_register_script(sw_path=sw_path, scope=normalized_scope))
         app.hdrs = list(app.hdrs) + [reg_script]
 
     # 4. Serve Offline Page
     if offline_page:
 
-        @app.get("/offline")
+        @app.get(offline_path)
         def offline() -> Any:
             return (
                 Title("Offline - " + name),
                 EmptyState(
                     title="No Internet Connection",
                     description="You are currently offline. Please check your connection and try again.",
-                    icon="wifi-off",
+                    icon="wifi-slash",
                     action_text="Retry",
                     action_href=start_url,  # Try going home
                     cls="min-vh-100 d-flex align-items-center justify-content-center",

@@ -54,6 +54,15 @@ def test_button_loading():
     assert "disabled" in html
 
 
+def test_button_loading_text_replaces_children():
+    """loading_text should replace existing children while loading."""
+    btn = Button("Original", loading=True, loading_text="Saving...")
+    html = to_xml(btn)
+
+    assert "Saving..." in html
+    assert "Original" not in html
+
+
 def test_button_icon():
     """Button can display icon."""
     btn = Button("Save", icon="check")

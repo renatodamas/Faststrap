@@ -4,6 +4,7 @@ from fasthtml.common import to_xml
 
 from faststrap import Button
 from faststrap.components.feedback import Modal
+from faststrap.core.theme import reset_component_defaults, set_component_defaults
 
 
 def test_modal_basic():
@@ -137,6 +138,18 @@ def test_modal_data_attributes():
     html = to_xml(modal)
 
     assert 'data-test="value"' in html
+
+
+def test_modal_respects_global_fade_default():
+    """Modal should respect set_component_defaults for fade."""
+    reset_component_defaults()
+    try:
+        set_component_defaults("Modal", fade=False)
+        modal = Modal("Content", modal_id="fadeModal")
+        html = to_xml(modal)
+        assert "modal fade" not in html
+    finally:
+        reset_component_defaults()
 
 
 def test_modal_multiple_children():

@@ -59,36 +59,26 @@ def Card(
     # Resolve defaults
     cfg = resolve_defaults(
         "Card",
-        title=title,
-        subtitle=subtitle,
-        header=header,
-        footer=footer,
-        img_top=img_top,
-        img_bottom=img_bottom,
-        img_overlay=img_overlay,
         header_cls=header_cls,
         body_cls=body_cls,
         footer_cls=footer_cls,
-        title_cls=title_cls,
-        subtitle_cls=subtitle_cls,
-        text_cls=text_cls,
     )
 
-    c_title = cfg.get("title")
-    c_subtitle = cfg.get("subtitle")
-    c_header = cfg.get("header")
-    c_footer = cfg.get("footer")
-    c_img_top = cfg.get("img_top")
-    c_img_bottom = cfg.get("img_bottom")
-    c_img_overlay = cfg.get("img_overlay", False)
+    c_title = title
+    c_subtitle = subtitle
+    c_header = header
+    c_footer = footer
+    c_img_top = img_top
+    c_img_bottom = img_bottom
+    c_img_overlay = img_overlay
 
     # CSS classes (fallback to empty string if None)
     c_header_cls = cfg.get("header_cls") or ""
     c_body_cls = cfg.get("body_cls") or ""
     c_footer_cls = cfg.get("footer_cls") or ""
-    c_title_cls = cfg.get("title_cls") or ""
-    c_subtitle_cls = cfg.get("subtitle_cls") or ""
-    c_text_cls = cfg.get("text_cls") or ""
+    c_title_cls = title_cls or ""
+    c_subtitle_cls = subtitle_cls or ""
+    c_text_cls = text_cls or ""
 
     # Build base classes
     classes = ["card"]
