@@ -4,7 +4,9 @@ from __future__ import annotations
 
 import argparse
 import importlib
+import importlib.metadata
 import os
+import re
 from collections.abc import Iterable
 from dataclasses import dataclass
 from pathlib import Path
@@ -92,10 +94,129 @@ def check_common_preset_misuse(root: Path) -> list[DoctorIssue]:
     return issues
 
 
+def _is_serverless_env() -> bool:
+    return bool(
+        os.getenv("VERCEL") == "1"
+        or os.getenv("AWS_LAMBDA_FUNCTION_NAME")
+        or os.getenv("K_SERVICE")
+    )
+
+
+def _parse_min_fasthtml_version(root: Path) -> str | None:
+    pyproject = root / "pyproject.toml"
+    if not pyproject.exists():
+        return None
+    text = pyproject.read_text(encoding="utf-8", errors="ignore")
+    match = re.search(r"python-fasthtml>=([0-9][0-9A-Za-z.\-]*)", text)
+    return match.group(1) if match else None
+
+
+def _version_key(version: str) -> tuple[int, ...]:
+    parts = []
+    for token in re.split(r"[.\-+]", version):
+        if token.isdigit():
+            parts.append(int(token))
+        else:
+            break
+    return tuple(parts)
+
+
+def check_fasthtml_version(root: Path) -> list[DoctorIssue]:
+    issues: list[DoctorIssue] = []
+    min_required = _parse_min_fasthtml_version(root)
+    if not min_required:
+        return issues
+
+    try:
+        installed = importlib.metadata.version("python-fasthtml")
+    except importlib.metadata.PackageNotFoundError:
+        issues.append(
+            DoctorIssue(
+                level="warn",
+                code="fasthtml-missing",
+                message="python-fasthtml is not installed in this environment.",
+            )
+        )
+        return issues
+
+    if _version_key(installed) < _version_key(min_required):
+        issues.append(
+            DoctorIssue(
+                level="warn",
+                code="fasthtml-version",
+                message=(
+                    f"python-fasthtml {installed} is below required minimum {min_required}. "
+                    "Upgrade dependency to avoid runtime issues."
+                ),
+            )
+        )
+    return issues
+
+
+def check_add_bootstrap_called(root: Path) -> list[DoctorIssue]:
+    for file in _iter_python_files(root):
+        text = file.read_text(encoding="utf-8", errors="ignore")
+        if "add_bootstrap(" in text:
+            return []
+    return [
+        DoctorIssue(
+            level="warn",
+            code="add-bootstrap-missing",
+            message=(
+                "No add_bootstrap(...) call found in project files. "
+                "Bootstrap/Faststrap assets may not be injected."
+            ),
+        )
+    ]
+
+
+def check_serverless_cdn(root: Path) -> list[DoctorIssue]:
+    if not _is_serverless_env():
+        return []
+    for file in _iter_python_files(root):
+        text = file.read_text(encoding="utf-8", errors="ignore")
+        if "add_bootstrap(" in text and "use_cdn=True" in text:
+            return []
+    return [
+        DoctorIssue(
+            level="warn",
+            code="serverless-cdn",
+            message=(
+                "Serverless environment detected but no use_cdn=True found. "
+                "Use add_bootstrap(app, use_cdn=True) on Vercel/Lambda/Cloud Run."
+            ),
+        )
+    ]
+
+
+def check_serve_in_serverless(root: Path) -> list[DoctorIssue]:
+    if not _is_serverless_env():
+        return []
+    issues: list[DoctorIssue] = []
+    for file in _iter_python_files(root):
+        text = file.read_text(encoding="utf-8", errors="ignore")
+        if "serve(" in text:
+            issues.append(
+                DoctorIssue(
+                    level="warn",
+                    code="serverless-serve",
+                    message=(
+                        f"serve() call found in {file}. Remove serve() in serverless "
+                        "deployments and expose the ASGI app object directly."
+                    ),
+                )
+            )
+    return issues
+
+
 def run_doctor(path: str = ".") -> int:
     root = Path(path).resolve()
     all_issues = [
+        *check_fasthtml_version(root),
         *check_import_source(root),
+        *check_add_bootstrap_called(root),
+        *check_serverless_cdn(root),
+        *check_serve_in_serverless(root),
         *check_static_mount_conflicts(root),
         *check_toast_container(root),
         *check_common_preset_misuse(root),

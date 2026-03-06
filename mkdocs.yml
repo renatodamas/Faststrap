@@ -81,6 +81,14 @@ nav:
     - Static Files: STATIC_FILES.md
     - PWA Guide: PWA_GUIDE.md
     - Troubleshooting: TROUBLESHOOTING.md
+  - Deployment:
+    - Overview: deployment/overview.md
+    - Vercel: deployment/vercel.md
+    - Railway: deployment/railway.md
+    - Render: deployment/render.md
+    - Fly.io: deployment/flyio.md
+    - VPS: deployment/vps.md
+    - Split Architecture: deployment/split-architecture.md
   - Components:
     - Forms:
       - Button: components/forms/button.md

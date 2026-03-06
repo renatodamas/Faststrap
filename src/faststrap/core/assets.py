@@ -8,6 +8,7 @@ from __future__ import annotations
 import os
 import sys
 import warnings
+from importlib import metadata as importlib_metadata
 from os import environ
 from pathlib import Path
 from typing import Any
@@ -40,6 +41,14 @@ BOOTSTRAP_JS_URL = (
 
 BOOTSTRAP_CSS_INTEGRITY = "sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH"
 BOOTSTRAP_JS_INTEGRITY = "sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
+# Bootstrap Icons docs currently do not publish an official SRI hash for this asset.
+BOOTSTRAP_ICONS_INTEGRITY: str | None = None
+
+# When new CSS files are added to src/faststrap/static/css/, add them here.
+FASTSTRAP_CDN_CSS_FILES = [
+    "css/faststrap-fx.css",
+    "css/faststrap-layouts.css",
+]
 
 # CDN assets with SRI hashes
 CDN_ASSETS = (
@@ -62,16 +71,70 @@ CDN_ASSETS = (
 )
 
 
-def local_assets(static_url: str) -> tuple[Any, ...]:
+def local_assets(static_url: str, *, include_js: bool = True) -> tuple[Any, ...]:
     """Generate local asset links for the given static URL."""
     base = static_url.rstrip("/")
-    return (
+    assets: list[Any] = [
         Link(rel="stylesheet", href=f"{base}/css/bootstrap.min.css"),
         Link(rel="stylesheet", href=f"{base}/css/bootstrap-icons.min.css"),
         Link(rel="stylesheet", href=f"{base}/css/faststrap-fx.css"),
         Link(rel="stylesheet", href=f"{base}/css/faststrap-layouts.css"),
-        Script(src=f"{base}/js/bootstrap.bundle.min.js"),
+    ]
+    if include_js:
+        assets.append(Script(src=f"{base}/js/bootstrap.bundle.min.js"))
+    return tuple(assets)
+
+
+def _get_faststrap_cdn_version() -> str:
+    """Read installed package version for CDN pinning, fallback to main in editable/dev."""
+    try:
+        return importlib_metadata.version("faststrap")
+    except importlib_metadata.PackageNotFoundError:
+        return "main"
+
+
+def _build_cdn_assets(
+    version: str,
+    include_favicon: bool,
+    *,
+    include_js: bool = True,
+) -> list[Any]:
+    """Build complete CDN assets list for use_cdn mode."""
+    static_base = (
+        f"https://cdn.jsdelivr.net/gh/Faststrap-org/Faststrap@v{version}/src/faststrap/static"
     )
+    assets: list[Any] = [
+        Link(
+            rel="stylesheet",
+            href=BOOTSTRAP_CSS_URL,
+            integrity=BOOTSTRAP_CSS_INTEGRITY,
+            crossorigin="anonymous",
+        ),
+    ]
+
+    icons_link: dict[str, Any] = {"rel": "stylesheet", "href": BOOTSTRAP_ICONS_URL}
+    if BOOTSTRAP_ICONS_INTEGRITY:
+        icons_link["integrity"] = BOOTSTRAP_ICONS_INTEGRITY
+        icons_link["crossorigin"] = "anonymous"
+    assets.append(Link(**icons_link))
+
+    for css_path in FASTSTRAP_CDN_CSS_FILES:
+        assets.append(Link(rel="stylesheet", href=f"{static_base}/{css_path}"))
+
+    if include_js:
+        assets.append(
+            Script(
+                src=BOOTSTRAP_JS_URL,
+                integrity=BOOTSTRAP_JS_INTEGRITY,
+                crossorigin="anonymous",
+                defer=True,
+            )
+        )
+
+    if include_favicon:
+        assets.append(Link(rel="icon", type="image/svg+xml", href=f"{static_base}/favicon.svg"))
+
+    return assets
 
 
 # Custom FastStrap enhancements
@@ -230,6 +293,8 @@ def get_assets(
     mode: ModeType = "light",
     font_family: str | None = None,
     font_weights: list[int] | None = None,
+    include_js: bool = True,
+    include_favicon: bool = False,
 ) -> tuple[Any, ...]:
     """
     Get Bootstrap assets for injection.
@@ -242,6 +307,8 @@ def get_assets(
         mode: Color mode - "light", "dark", or "auto"
         font_family: Google Font name (e.g., "Inter", "Roboto", "Poppins")
         font_weights: Font weights to load (default: [400, 500, 700])
+        include_js: Include Bootstrap JavaScript bundle
+        include_favicon: Include default Faststrap favicon (CDN mode only)
 
     Returns:
         Tuple of FastHTML elements for app.hdrs
@@ -250,10 +317,16 @@ def get_assets(
         use_cdn = environ.get("FASTSTRAP_USE_CDN", "false").lower() == "true"
 
     if use_cdn:
-        assets = CDN_ASSETS
+        assets = tuple(
+            _build_cdn_assets(
+                _get_faststrap_cdn_version(),
+                include_favicon=include_favicon,
+                include_js=include_js,
+            )
+        )
     else:
         actual_static_url = static_url if static_url is not None else "/static"
-        assets = local_assets(actual_static_url)
+        assets = local_assets(actual_static_url, include_js=include_js)
 
     elements = list(assets)
 
@@ -296,6 +369,15 @@ def get_assets(
     return tuple(elements)
 
 
+def _any_requires_js(components: list[Any]) -> bool:
+    """Check component registry metadata for JS requirement."""
+    for comp in components:
+        meta = getattr(comp, "__faststrap_metadata__", None)
+        if meta and meta.get("requires_js", False):
+            return True
+    return False
+
+
 def add_bootstrap(
     app: Any,
     theme: str | Theme | None = None,
@@ -308,9 +390,9 @@ def add_bootstrap(
     favicon_url: str | None = None,
     font_family: str | None = None,
     font_weights: list[int] | None = None,
+    components: list[Any] | None = None,
 ) -> Any:
-    """
-    Enhance FastHTML app with Bootstrap (production-safe).
+    """Enhance FastHTML app with Bootstrap and FastStrap assets.
 
     Args:
         app: FastHTML application instance
@@ -320,7 +402,10 @@ def add_bootstrap(
               - "light": Light background, dark text (default)
               - "dark": Dark background, light text
               - "auto": Follows user's system preference (prefers-color-scheme)
-        use_cdn: Use CDN instead of local assets
+        use_cdn: When True, ALL assets (Bootstrap CSS/JS, Bootstrap Icons,
+                 Faststrap CSS files, favicon) are served from CDN. No local
+                 StaticFiles are mounted. Required for serverless deployments
+                 (Vercel, AWS Lambda, Google Cloud Run). Default: False.
         mount_static: Auto-mount static directory
         static_url: Preferred URL prefix for static files
         force_static_url: Force use of this URL even if already mounted
@@ -328,6 +413,11 @@ def add_bootstrap(
         favicon_url: Custom favicon URL (overrides default)
         font_family: Google Font name (e.g., "Inter", "Roboto", "Poppins")
         font_weights: Font weights to load (default: [400, 500, 700])
+        components: Optional list of Faststrap component functions used in the app.
+            When provided, Bootstrap JS is only injected if at least one
+            component has requires_js=True in its registry metadata.
+            Components without @register() metadata are treated as
+            requires_js=False. When None (default), JS is always injected.
 
     Returns:
         Modified app instance
@@ -360,8 +450,18 @@ def add_bootstrap(
         # CDN mode for production
         add_bootstrap(app, theme="blue-ocean", mode="auto", use_cdn=True)
     """
+    if getattr(app, "_faststrap_bootstrap_added", False):
+        raise RuntimeError(
+            "add_bootstrap() has already been called on this app. "
+            "It should only be called once during app setup. "
+            "If you are using fast_app(), call add_bootstrap() after "
+            "fast_app() returns the app object."
+        )
+    app._faststrap_bootstrap_added = True
+
     if use_cdn is None:
         use_cdn = environ.get("FASTSTRAP_USE_CDN", "false").lower() == "true"
+    include_js = True if components is None else _any_requires_js(components)
 
     # 1. Determine where to mount static files
     actual_static_url = static_url
@@ -380,8 +480,9 @@ def add_bootstrap(
     if favicon_url:
         favicon_links = create_favicon_links(favicon_url)
     elif include_favicon:
-        default_favicon = get_default_favicon_url(use_cdn, actual_static_url)
-        favicon_links = create_favicon_links(default_favicon)
+        if not use_cdn:
+            default_favicon = get_default_favicon_url(False, actual_static_url)
+            favicon_links = create_favicon_links(default_favicon)
 
     # 3. Get Bootstrap assets with theme, mode, and font
     bootstrap_assets = get_assets(
@@ -392,6 +493,8 @@ def add_bootstrap(
         mode=mode,
         font_family=font_family,
         font_weights=font_weights,
+        include_js=include_js,
+        include_favicon=use_cdn and include_favicon and favicon_url is None,
     )
 
     # 4. Idempotent Header Management
@@ -443,19 +546,26 @@ def add_bootstrap(
             Falling back to CDN mode. You can explicitly set use_cdn=True.
             """
                 warnings.warn(caution, RuntimeWarning, stacklevel=2)
+                use_cdn = True
+                if favicon_url:
+                    fallback_favicon_links = create_favicon_links(favicon_url)
+                else:
+                    fallback_favicon_links = []
 
-                # Re-call with CDN=True
-                return add_bootstrap(
-                    app,
+                fallback_bootstrap_assets = get_assets(
+                    use_cdn=True,
+                    include_custom=True,
+                    static_url=None,
                     theme=theme,
                     mode=mode,
-                    use_cdn=True,
-                    mount_static=False,
-                    include_favicon=include_favicon,
-                    favicon_url=favicon_url,
                     font_family=font_family,
                     font_weights=font_weights,
+                    include_js=include_js,
+                    include_favicon=include_favicon and favicon_url is None,
                 )
+                fallback_fs_hdrs = list(fallback_favicon_links) + list(fallback_bootstrap_assets)
+                app.hdrs = fallback_fs_hdrs + filtered_hdrs
+                app._faststrap_hdrs = fallback_fs_hdrs
 
     return app
 

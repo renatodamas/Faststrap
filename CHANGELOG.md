@@ -5,6 +5,33 @@ All notable changes to Faststrap will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.8] - 2026-03-06
+
+### Fixed
+
+- `use_cdn=True` now covers all Faststrap static assets. Faststrap effects CSS,
+  layouts CSS, and favicon are now served from jsDelivr GitHub CDN (version-pinned).
+  No local `StaticFiles` are mounted when `use_cdn=True`.
+- Bootstrap Icons CDN link now supports optional SRI wiring if upstream publishes
+  an official hash for the pinned version.
+
+### Added
+
+- Duplicate `add_bootstrap()` call guard with clear error messaging.
+- `components` parameter on `add_bootstrap()` for conditional Bootstrap JS injection.
+- `FASTSTRAP_CDN_CSS_FILES` manifest list for easy future CDN asset expansion.
+- Deployment docs: Vercel, Railway, Render, Fly.io, VPS, and split architecture.
+- `faststrap doctor` extended with:
+  - FastHTML version compatibility check
+  - `add_bootstrap()` presence check
+  - serverless CDN detection
+  - `serve()` usage detection in serverless environments
+
+### Infrastructure
+
+- jsDelivr GitHub CDN integration for Faststrap-specific static assets with
+  package-version pinning.
+
 ## [0.5.6.post3] - 2026-02-23
 
 ### Fixed

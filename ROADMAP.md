@@ -4,7 +4,7 @@
 
 ---
 
-## Current Status (v0.5.6.post3 - February 2026)
+## Current Status (v0.5.8 - March 2026)
 
 **67 components live** – Phase 1 through 5B complete  
 **569+ tests** - 90%+ coverage  
@@ -513,7 +513,8 @@ Your votes directly influence what gets built next.
 
 ---
 
-**Last Updated: February 2026**  
-**Current Version: 0.5.6.post3 (PWA route fix + resilient caching baseline + advanced PWA plan formalized)**
+**Last Updated: March 2026**  
+**Current Version: 0.5.8 (CDN mode completion, deployment docs, and doctor checks)**
 
 **Let's build the definitive UI library for FastHTML — together.**
+
