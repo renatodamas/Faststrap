@@ -48,6 +48,10 @@ dev = [
     "black>=24.0",
     "ruff>=0.5.0",
 ]
+markdown = [
+    "markdown>=3.6",
+    "bleach>=6.0",
+]
 
 [project.urls]
 Homepage = "https://github.com/Faststrap-org/Faststrap"

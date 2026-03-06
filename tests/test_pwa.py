@@ -130,3 +130,77 @@ def test_add_pwa_scope_uses_scoped_routes_and_registration():
     script_text = "".join(str(h) for h in app.hdrs if getattr(h, "tag", "") == "script")
     assert "register('/myapp/sw.js'" in script_text
     assert "scope: '/myapp/'" in script_text
+
+
+def test_background_sync_foundation_disabled_by_default():
+    """Service worker should keep background sync disabled unless explicitly enabled."""
+    app = FastHTML()
+    add_pwa(app, service_worker=True)
+
+    client = TestClient(app)
+    response = client.get("/sw.js")
+    assert response.status_code == 200
+    sw = response.text
+    assert "const ENABLE_BACKGROUND_SYNC = false" in sw
+    assert "BACKGROUND_SYNC_TAG" in sw
+
+
+def test_background_sync_foundation_enabled_with_custom_tag():
+    """Background sync scaffold should be present when enabled."""
+    app = FastHTML()
+    add_pwa(
+        app,
+        service_worker=True,
+        enable_background_sync=True,
+        background_sync_tag="faststrap-sync-queue",
+    )
+
+    client = TestClient(app)
+    response = client.get("/sw.js")
+    assert response.status_code == 200
+    sw = response.text
+    assert "const ENABLE_BACKGROUND_SYNC = true" in sw
+    assert 'const BACKGROUND_SYNC_TAG = "faststrap-sync-queue";' in sw
+    assert 'self.addEventListener("sync"' in sw
+
+    script_text = "".join(str(h) for h in app.hdrs if getattr(h, "tag", "") == "script")
+    assert "reg.sync.register('faststrap-sync-queue')" in script_text
+
+
+def test_pwa_route_cache_policies_are_embedded_in_sw():
+    """Route strategy map should be serialized into the SW for policy dispatch."""
+    app = FastHTML()
+    add_pwa(
+        app,
+        service_worker=True,
+        route_cache_policies={
+            "/api/public/": "stale-while-revalidate",
+            "/assets/": "cache-first",
+        },
+    )
+
+    client = TestClient(app)
+    response = client.get("/sw.js")
+    assert response.status_code == 200
+    sw = response.text
+    assert (
+        'const ROUTE_CACHE_POLICIES = {"/api/public/": "stale-while-revalidate", "/assets/": "cache-first"};'
+        in sw
+    )
+    assert "resolveRouteStrategy(event.request)" in sw
+    assert 'if (routeStrategy === "cache-first")' in sw
+
+
+def test_pwa_push_foundation_enabled():
+    """Push handlers should only be active when explicitly enabled."""
+    app = FastHTML()
+    add_pwa(app, service_worker=True, enable_push=True, default_push_title="My App Notice")
+
+    client = TestClient(app)
+    response = client.get("/sw.js")
+    assert response.status_code == 200
+    sw = response.text
+    assert "const ENABLE_PUSH = true" in sw
+    assert 'const DEFAULT_PUSH_TITLE = "My App Notice";' in sw
+    assert 'self.addEventListener("push"' in sw
+    assert 'self.addEventListener("notificationclick"' in sw

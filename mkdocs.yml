@@ -109,6 +109,7 @@ nav:
       - Figure: components/display/figure.md
       - Badge: components/display/badge.md
       - Icon: components/display/icon.md
+      - Markdown: components/display/markdown.md
       - Image: components/display/image.md
       - Carousel: components/display/carousel.md
       - Empty State: components/display/empty_state.md
@@ -149,6 +150,8 @@ nav:
     - AutoRefresh: presets/auto-refresh.md
     - LazyLoad: presets/lazy-load.md
     - LoadingButton: presets/loading-button.md
+    - OptimisticAction: presets/optimistic-action.md
+    - LocationAction: presets/location-action.md
     - Response Helpers: presets/responses.md
     - Route Protection: presets/require-auth.md
   - Layouts:

@@ -13,6 +13,8 @@ Most SaaS frontends ship custom JavaScript for:
 - Auto-refreshing dashboards → **AutoRefresh**
 - Lazy loading content → **LazyLoad**
 - Loading buttons → **LoadingButton**
+- Optimistic mutation flows → **OptimisticAction**
+- Browser location actions → **LocationAction**
 
 FastStrap replaces all of these with **zero JavaScript**.
 
@@ -21,7 +23,15 @@ FastStrap replaces all of these with **zero JavaScript**.
 Presets are included in FastStrap but imported separately:
 
 ```python
-from faststrap.presets import ActiveSearch, InfiniteScroll, AutoRefresh, LazyLoad, LoadingButton
+from faststrap.presets import (
+    ActiveSearch,
+    InfiniteScroll,
+    AutoRefresh,
+    LazyLoad,
+    LocationAction,
+    LoadingButton,
+    OptimisticAction,
+)
 ```
 
 ## Response Helpers

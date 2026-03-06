@@ -16,6 +16,8 @@ from .interactions import (
     InfiniteScroll,
     LazyLoad,
     LoadingButton,
+    LocationAction,
+    OptimisticAction,
 )
 from .responses import (
     hx_redirect,
@@ -32,7 +34,9 @@ __all__ = [
     "AutoRefresh",
     "InfiniteScroll",
     "LazyLoad",
+    "LocationAction",
     "LoadingButton",
+    "OptimisticAction",
     # Responses
     "hx_redirect",
     "hx_refresh",

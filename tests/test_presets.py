@@ -8,6 +8,8 @@ from faststrap.presets import (
     InfiniteScroll,
     LazyLoad,
     LoadingButton,
+    LocationAction,
+    OptimisticAction,
     hx_redirect,
     hx_refresh,
     hx_trigger,
@@ -64,6 +66,51 @@ def test_loading_button():
     assert "Save" in html
     assert "/save" in html
     assert "hx-indicator" in html or "htmx-indicator" in html
+
+
+def test_optimistic_action_contract_attributes():
+    """OptimisticAction emits apply/commit/rollback lifecycle attributes."""
+    btn = OptimisticAction(
+        "Archive",
+        endpoint="/items/1/archive",
+        target="#item-1",
+        action_id="archive-1",
+        payload={"item_id": 1},
+    )
+    html = to_xml(btn)
+
+    assert "/items/1/archive" in html
+    assert "faststrap:optimistic:apply" in html
+    assert "faststrap:optimistic:commit" in html
+    assert "faststrap:optimistic:rollback" in html
+    assert 'data-faststrap-optimistic-id="archive-1"' in html
+    assert "hx-on::before-request" in html
+    assert "hx-on::after-request" in html
+    assert "hx-on::response-error" in html
+
+
+def test_optimistic_action_invalid_method_raises():
+    """OptimisticAction validates allowed HTTP methods."""
+    try:
+        OptimisticAction("Run", endpoint="/jobs/1", method="trace")
+        raise AssertionError("Expected ValueError for unsupported HTTP method")
+    except ValueError as exc:
+        assert "Unsupported HTTP method" in str(exc)
+
+
+def test_location_action_has_geolocation_contract() -> None:
+    """LocationAction should emit success/error event hooks and use geolocation."""
+    btn = LocationAction(
+        "Use Location",
+        endpoint="/api/location",
+        target="#location-result",
+    )
+    html = to_xml(btn)
+    assert "navigator.geolocation.getCurrentPosition" in html
+    assert "faststrap:location:success" in html
+    assert "faststrap:location:error" in html
+    assert "/api/location" in html
+    assert "#location-result" in html
 
 
 # Response Helpers Tests

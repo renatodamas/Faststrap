@@ -1,9 +1,10 @@
 """HTMX Interaction Presets.
 
 Ready-to-use components for common HTMX patterns like live search,
-infinite scroll, auto-refresh, and lazy loading.
+infinite scroll, auto-refresh, lazy loading, and optimistic UI actions.
 """
 
+import json
 from typing import Any
 
 from fasthtml.common import Div, Input
@@ -11,6 +12,16 @@ from fasthtml.common import Div, Input
 from ..components.forms.button import Button
 from ..core.base import merge_classes
 from ..utils.attrs import convert_attrs
+
+
+def _build_optimistic_dispatch_script(event_name: str, detail: dict[str, Any]) -> str:
+    """Build a small inline script that dispatches a bubbling CustomEvent."""
+    event_json = json.dumps(event_name)
+    detail_json = json.dumps(detail)
+    return (
+        f"this.dispatchEvent(new CustomEvent({event_json}, "
+        f"{{bubbles:true,detail:{detail_json}}}));"
+    )
 
 
 def ActiveSearch(
@@ -386,5 +397,157 @@ def LoadingButton(
         variant=variant,  # type: ignore
         loading=False,  # We'll use hx-indicator instead
         **hx_attrs,  # type: ignore
+        **kwargs,
+    )
+
+
+def OptimisticAction(
+    *children: Any,
+    endpoint: str,
+    method: str = "post",
+    target: str | None = None,
+    action_id: str | None = None,
+    payload: dict[str, Any] | None = None,
+    apply_event: str = "faststrap:optimistic:apply",
+    commit_event: str = "faststrap:optimistic:commit",
+    rollback_event: str = "faststrap:optimistic:rollback",
+    variant: str = "primary",
+    **kwargs: Any,
+) -> Any:
+    """Button preset for optimistic UI updates with explicit rollback contract.
+
+    Event contract:
+    - `apply_event`: fired before request starts
+    - `commit_event`: fired after successful response
+    - `rollback_event`: fired on failed/network error responses
+
+    All events dispatch from the button element with bubbling enabled and
+    include a detail object:
+    `{actionId, endpoint, method, target, payload, reason}`.
+    """
+    normalized_method = method.lower()
+    if normalized_method not in {"get", "post", "put", "patch", "delete"}:
+        msg = f"Unsupported HTTP method for OptimisticAction: {method!r}"
+        raise ValueError(msg)
+
+    resolved_action_id = action_id or f"{normalized_method}:{endpoint}"
+    resolved_payload: dict[str, Any] = payload or {}
+
+    base_detail = {
+        "actionId": resolved_action_id,
+        "endpoint": endpoint,
+        "method": normalized_method,
+        "target": target,
+        "payload": resolved_payload,
+    }
+
+    before_script = _build_optimistic_dispatch_script(
+        apply_event,
+        {**base_detail, "reason": "before-request"},
+    )
+    commit_script = (
+        "if(event.detail.successful){"
+        + _build_optimistic_dispatch_script(
+            commit_event,
+            {**base_detail, "reason": "success"},
+        )
+        + "}"
+    )
+    rollback_script = _build_optimistic_dispatch_script(
+        rollback_event,
+        {**base_detail, "reason": "response-error"},
+    )
+    rollback_send_error_script = _build_optimistic_dispatch_script(
+        rollback_event,
+        {**base_detail, "reason": "network-error"},
+    )
+
+    hx_method_attr = f"hx_{normalized_method}"
+    hx_attrs: dict[str, Any] = {
+        hx_method_attr: endpoint,
+        "hx_disabled_elt": "this",
+        "hx-on::before-request": before_script,
+        "hx-on::after-request": commit_script,
+        "hx-on::response-error": rollback_script,
+        "hx-on::send-error": rollback_send_error_script,
+    }
+
+    if target:
+        hx_attrs["hx_target"] = target
+
+    if "hx_indicator" not in kwargs:
+        hx_attrs["hx_indicator"] = "this"
+
+    for key in ["hx_swap", "hx_confirm", "hx_indicator", "hx_push_url"]:
+        if key in kwargs:
+            hx_attrs[key] = kwargs.pop(key)
+
+    data_attrs = kwargs.pop("data", {})
+    if not isinstance(data_attrs, dict):
+        data_attrs = {}
+    data_attrs = {
+        **data_attrs,
+        "faststrap_optimistic_id": resolved_action_id,
+        "faststrap_optimistic_endpoint": endpoint,
+        "faststrap_optimistic_method": normalized_method,
+    }
+    kwargs["data"] = data_attrs
+
+    return Button(
+        *children,
+        variant=variant,  # type: ignore[arg-type]
+        loading=False,
+        **hx_attrs,  # type: ignore[arg-type]
+        **kwargs,
+    )
+
+
+def LocationAction(
+    *children: Any,
+    endpoint: str | None = None,
+    method: str = "post",
+    target: str | None = None,
+    success_event: str = "faststrap:location:success",
+    error_event: str = "faststrap:location:error",
+    variant: str = "secondary",
+    **kwargs: Any,
+) -> Any:
+    """Progressive location helper with explicit permission/error events.
+
+    Behavior:
+    - Requests browser geolocation on click
+    - Dispatches bubbling success/error custom events
+    - Optionally sends coordinates via HTMX (`htmx.ajax`) when endpoint is set
+    """
+    endpoint_js = json.dumps(endpoint) if endpoint else "null"
+    target_js = json.dumps(target) if target else "null"
+    method_js = json.dumps(method.upper())
+    success_event_js = json.dumps(success_event)
+    error_event_js = json.dumps(error_event)
+
+    onclick_script = (
+        "if(!navigator.geolocation){"
+        f"this.dispatchEvent(new CustomEvent({error_event_js},{{bubbles:true,detail:{{reason:'unsupported'}}}}));"
+        "return;"
+        "}"
+        "navigator.geolocation.getCurrentPosition((pos)=>{"
+        "const detail={latitude:pos.coords.latitude,longitude:pos.coords.longitude,accuracy:pos.coords.accuracy};"
+        f"this.dispatchEvent(new CustomEvent({success_event_js},{{bubbles:true,detail}}));"
+        f"const endpoint={endpoint_js};"
+        f"const target={target_js};"
+        f"const method={method_js};"
+        "if(endpoint && window.htmx){"
+        "htmx.ajax(method, endpoint, {target: target || this, values: detail});"
+        "}"
+        "},(err)=>{"
+        f"this.dispatchEvent(new CustomEvent({error_event_js},{{bubbles:true,detail:{{reason:'denied',code:err.code,message:err.message}}}}));"
+        "});"
+    )
+
+    return Button(
+        *children if children else ("Share location",),
+        variant=variant,  # type: ignore[arg-type]
+        type="button",
+        onclick=onclick_script,
         **kwargs,
     )

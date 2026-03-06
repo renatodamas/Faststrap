@@ -71,6 +71,59 @@ add_pwa(
 
 Faststrap still pre-caches its core defaults and `/offline`.
 
+## Background Sync Foundation (Opt-in)
+
+Faststrap includes a lightweight background sync scaffold that you can enable
+without committing to a queue implementation yet:
+
+```python
+add_pwa(
+    app,
+    enable_background_sync=True,
+    background_sync_tag="faststrap-background-sync",
+)
+```
+
+- `enable_background_sync`: enables service worker `sync` event hooks
+- `background_sync_tag`: tag used when registering sync tasks
+
+This is intentionally a foundation layer for v0.6.x work; request queue
+persistence/replay is still application-defined.
+
+## Route-Aware Cache Policies (Opt-in)
+
+You can define route prefix policies in the generated service worker:
+
+```python
+add_pwa(
+    app,
+    route_cache_policies={
+        "/api/public/": "stale-while-revalidate",
+        "/assets/": "cache-first",
+    },
+)
+```
+
+Supported strategies:
+
+- `network-first`
+- `stale-while-revalidate`
+- `cache-first`
+
+## Push Foundation (Opt-in)
+
+Enable push event scaffolding in the generated service worker:
+
+```python
+add_pwa(
+    app,
+    enable_push=True,
+    default_push_title="My App Notification",
+)
+```
+
+This adds `push` and `notificationclick` handlers with safe defaults.
+
 ## When to Use a Custom Service Worker
 
 Use a custom `sw.js` when you need:

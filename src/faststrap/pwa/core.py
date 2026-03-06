@@ -1,5 +1,6 @@
 """Core PWA functionality for Faststrap."""
 
+import json
 from collections.abc import Sequence
 from typing import Any
 
@@ -28,13 +29,29 @@ def _normalize_scope(scope: str) -> str:
     return normalized_scope
 
 
-def _build_sw_register_script(sw_path: str, scope: str) -> str:
+def _build_sw_register_script(
+    sw_path: str,
+    scope: str,
+    *,
+    enable_background_sync: bool = False,
+    background_sync_tag: str = "faststrap-background-sync",
+) -> str:
     """Build service worker registration script for the configured scope."""
+    sync_registration = ""
+    if enable_background_sync:
+        sync_registration = f"""
+                if ('sync' in reg) {{
+                    reg.sync.register({background_sync_tag!r}).catch(err => console.log('Sync register failed', err));
+                }}
+"""
     return f"""
 if ('serviceWorker' in navigator) {{
     window.addEventListener('load', () => {{
         navigator.serviceWorker.register({sw_path!r}, {{ scope: {scope!r} }})
-            .then(reg => console.log('SW registered!', reg))
+            .then(reg => {{
+                console.log('SW registered!', reg);
+                {sync_registration}
+            }})
             .catch(err => console.log('SW failed', err));
     }});
 }}
@@ -56,10 +73,16 @@ def _render_sw_script(
     cache_version: str,
     pre_cache_urls: Sequence[str],
     offline_fallback_path: str,
+    enable_background_sync: bool,
+    background_sync_tag: str,
+    route_cache_policies: dict[str, str] | None,
+    enable_push: bool,
+    default_push_title: str,
 ) -> str:
     """Render a robust network-first + runtime-caching service worker."""
     escaped_urls = ",\n  ".join(f'"{url}"' for url in pre_cache_urls)
     full_cache_name = f"{cache_name}-{cache_version}"
+    serialized_route_policies = json.dumps(route_cache_policies or {})
 
     return f"""const CACHE_NAME = "{full_cache_name}";
 const OFFLINE_FALLBACK = "{offline_fallback_path}";
@@ -68,6 +91,11 @@ const PRECACHE_URLS = [
 ];
 
 const STATIC_DESTINATIONS = new Set(["style", "script", "image", "font"]);
+const ENABLE_BACKGROUND_SYNC = {"true" if enable_background_sync else "false"};
+const BACKGROUND_SYNC_TAG = "{background_sync_tag}";
+const ROUTE_CACHE_POLICIES = {serialized_route_policies};
+const ENABLE_PUSH = {"true" if enable_push else "false"};
+const DEFAULT_PUSH_TITLE = "{default_push_title}";
 
 function isHttpRequest(request) {{
   return request.url.startsWith("http://") || request.url.startsWith("https://");
@@ -130,6 +158,35 @@ async function staleWhileRevalidate(request) {{
   return new Response("", {{ status: 504, statusText: "Gateway Timeout" }});
 }}
 
+async function cacheFirst(request) {{
+  const cached = await caches.match(request);
+  if (cached) return cached;
+  try {{
+    const response = await fetch(request);
+    if (response && response.ok) {{
+      const cache = await caches.open(CACHE_NAME);
+      cache.put(request, response.clone());
+    }}
+    return response;
+  }} catch (_error) {{
+    return new Response("", {{ status: 504, statusText: "Gateway Timeout" }});
+  }}
+}}
+
+async function processBackgroundSync() {{
+  // Foundation hook: queue persistence/replay strategy plugs in here.
+  // Current behavior is intentionally no-op to keep this layer opt-in and safe.
+  return Promise.resolve();
+}}
+
+function resolveRouteStrategy(request) {{
+  const pathname = new URL(request.url).pathname;
+  for (const [prefix, strategy] of Object.entries(ROUTE_CACHE_POLICIES)) {{
+    if (pathname.startsWith(prefix)) return strategy;
+  }}
+  return null;
+}}
+
 self.addEventListener("install", (event) => {{
   event.waitUntil(safePrecache());
   self.skipWaiting();
@@ -142,6 +199,22 @@ self.addEventListener("activate", (event) => {{
 
 self.addEventListener("fetch", (event) => {{
   if (event.request.method !== "GET" || !isHttpRequest(event.request)) return;
+  const routeStrategy = resolveRouteStrategy(event.request);
+
+  if (routeStrategy === "cache-first") {{
+    event.respondWith(cacheFirst(event.request));
+    return;
+  }}
+
+  if (routeStrategy === "stale-while-revalidate") {{
+    event.respondWith(staleWhileRevalidate(event.request));
+    return;
+  }}
+
+  if (routeStrategy === "network-first") {{
+    event.respondWith(networkFirst(event.request));
+    return;
+  }}
 
   if (event.request.mode === "navigate") {{
     event.respondWith(networkFirst(event.request));
@@ -154,6 +227,31 @@ self.addEventListener("fetch", (event) => {{
   }}
 
   event.respondWith(networkFirst(event.request));
+}});
+
+self.addEventListener("sync", (event) => {{
+  if (!ENABLE_BACKGROUND_SYNC) return;
+  if (event.tag !== BACKGROUND_SYNC_TAG) return;
+  event.waitUntil(processBackgroundSync());
+}});
+
+self.addEventListener("push", (event) => {{
+  if (!ENABLE_PUSH) return;
+  const payload = event.data ? event.data.json() : {{}};
+  const title = payload.title || DEFAULT_PUSH_TITLE;
+  const options = {{
+    body: payload.body || "",
+    icon: payload.icon || "/static/icon.png",
+    badge: payload.badge || "/static/icon.png",
+    data: payload.data || {{}},
+  }};
+  event.waitUntil(self.registration.showNotification(title, options));
+}});
+
+self.addEventListener("notificationclick", (event) => {{
+  event.notification.close();
+  const targetUrl = (event.notification.data && event.notification.data.url) || "/";
+  event.waitUntil(clients.openWindow(targetUrl));
 }});
 """
 
@@ -229,6 +327,11 @@ def add_pwa(
     cache_name: str = "faststrap-app",
     cache_version: str = "v1",
     pre_cache_urls: Sequence[str] | None = None,
+    enable_background_sync: bool = False,
+    background_sync_tag: str = "faststrap-background-sync",
+    route_cache_policies: dict[str, str] | None = None,
+    enable_push: bool = False,
+    default_push_title: str = "Faststrap Notification",
 ) -> None:
     """
     Enable PWA capabilities for the FastHTML app.
@@ -255,6 +358,12 @@ def add_pwa(
         cache_name: Service worker cache name prefix
         cache_version: Cache version suffix used for cache invalidation
         pre_cache_urls: Optional extra URLs to precache (in addition to defaults)
+        enable_background_sync: Enable Background Sync foundation hooks
+        background_sync_tag: Tag used for Background Sync registrations
+        route_cache_policies: Optional route prefix -> strategy mapping
+                              values: "network-first", "stale-while-revalidate", "cache-first"
+        enable_push: Enable push notification service worker handlers
+        default_push_title: Fallback push notification title
     """
 
     normalized_scope = _normalize_scope(scope)
@@ -316,6 +425,11 @@ def add_pwa(
             cache_version=cache_version,
             pre_cache_urls=deduped_precache,
             offline_fallback_path=offline_path,
+            enable_background_sync=enable_background_sync,
+            background_sync_tag=background_sync_tag,
+            route_cache_policies=route_cache_policies,
+            enable_push=enable_push,
+            default_push_title=default_push_title,
         )
 
         @app.get(sw_path)
@@ -323,7 +437,14 @@ def add_pwa(
             return Response(sw_script, media_type="application/javascript")
 
         # Register the SW in the app (inject script)
-        reg_script = Script(_build_sw_register_script(sw_path=sw_path, scope=normalized_scope))
+        reg_script = Script(
+            _build_sw_register_script(
+                sw_path=sw_path,
+                scope=normalized_scope,
+                enable_background_sync=enable_background_sync,
+                background_sync_tag=background_sync_tag,
+            )
+        )
         app.hdrs = list(app.hdrs) + [reg_script]
 
     # 4. Serve Offline Page
