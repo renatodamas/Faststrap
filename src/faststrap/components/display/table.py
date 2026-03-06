@@ -7,7 +7,7 @@ from typing import Any, Literal
 from fasthtml.common import Div, Tbody, Td, Th, Thead, Tr
 from fasthtml.common import Table as FTTable
 
-from ...core._stability import stable
+from ...core._stability import beta, stable
 from ...core.base import merge_classes
 from ...utils.attrs import convert_attrs
 
@@ -309,3 +309,112 @@ def TCell(
     if header:
         return Th(*children, **attrs)
     return Td(*children, **attrs)
+
+
+@beta
+def _table_from_df(
+    data: Any,
+    *,
+    columns: list[str] | None = None,
+    max_rows: int | None = None,
+    include_index: bool = False,
+    empty_text: str = "No data available",
+    none_as: str = "",
+    header_map: dict[str, str] | None = None,
+    **table_kwargs: Any,
+) -> FTTable | Div:
+    """Build a table from pandas/polars data or list-of-dict records."""
+    resolved_columns: list[str]
+    records: list[dict[str, Any]]
+    index_values: list[str] | None = None
+
+    if isinstance(data, list) and all(isinstance(item, dict) for item in data):
+        records = list(data)
+        if columns is not None:
+            resolved_columns = columns
+        else:
+            key_order: list[str] = []
+            for item in records:
+                for key in item.keys():
+                    if key not in key_order:
+                        key_order.append(str(key))
+            resolved_columns = key_order
+        if max_rows is not None:
+            records = records[:max_rows]
+    else:
+        cls_name = data.__class__.__name__
+        module_name = data.__class__.__module__
+
+        if cls_name == "DataFrame" and module_name.startswith("pandas"):
+            df = data
+            if columns is not None:
+                df = df[columns]
+            if max_rows is not None:
+                df = df.head(max_rows)
+            resolved_columns = [str(col) for col in df.columns]
+            records = [
+                {str(key): value for key, value in row.items()}
+                for row in df.to_dict(orient="records")
+            ]
+            if include_index:
+                index_values = [str(i) for i in df.index.tolist()]
+        elif cls_name == "DataFrame" and module_name.startswith("polars"):
+            df = data
+            if columns is not None:
+                df = df.select(columns)
+            if max_rows is not None:
+                df = df.head(max_rows)
+            resolved_columns = [str(col) for col in df.columns]
+            records = [{str(key): value for key, value in row.items()} for row in df.to_dicts()]
+        else:
+            msg = (
+                "Table.from_df() expects pandas/polars DataFrame or list[dict]. "
+                f"Received: {data.__class__.__name__}"
+            )
+            raise TypeError(msg)
+
+    if include_index and index_values is None:
+        index_values = [str(i) for i in range(len(records))]
+
+    visible_columns = list(resolved_columns)
+    if include_index:
+        visible_columns = ["index", *visible_columns]
+
+    head_cells = [
+        TCell((header_map or {}).get(col, col), header=True, scope="col") for col in visible_columns
+    ]
+    thead = THead(TRow(*head_cells))
+
+    if not records:
+        tbody = TBody(
+            TRow(
+                TCell(
+                    empty_text,
+                    colspan=max(1, len(visible_columns)),
+                    cls="text-center text-muted",
+                )
+            )
+        )
+        return Table(thead, tbody, **table_kwargs)
+
+    body_rows: list[Tr] = []
+    for idx, row in enumerate(records):
+        row_cells: list[Td | Th] = []
+        if include_index and index_values is not None:
+            row_cells.append(TCell(index_values[idx], header=True, scope="row"))
+
+        for col in resolved_columns:
+            value = row.get(col)
+            if value is None:
+                rendered = none_as
+            else:
+                rendered = str(value)
+            row_cells.append(TCell(rendered))
+
+        body_rows.append(TRow(*row_cells))
+
+    tbody = TBody(*body_rows)
+    return Table(thead, tbody, **table_kwargs)
+
+
+Table.from_df = _table_from_df  # type: ignore[attr-defined]

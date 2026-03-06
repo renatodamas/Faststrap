@@ -90,6 +90,31 @@ Tables can overflow on small screens. Wrap them in a responsive container automa
 Table(..., responsive=True) # or responsive="sm", "md", "lg"
 ```
 
+### 3. DataFrame Builder (Beta)
+Generate a table directly from pandas/polars or list-of-dict records:
+
+```python
+import pandas as pd
+from faststrap import Table
+
+df = pd.DataFrame([
+    {"name": "Alice", "age": 25},
+    {"name": "Bob", "age": 30},
+])
+
+table = Table.from_df(
+    df,
+    striped=True,
+    include_index=False,
+    max_rows=100,
+)
+```
+
+Supported inputs:
+- pandas `DataFrame`
+- polars `DataFrame` (if installed)
+- `list[dict]`
+
 ---
 
 ## API Reference
