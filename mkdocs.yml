@@ -109,6 +109,7 @@ nav:
       - Figure: components/display/figure.md
       - Badge: components/display/badge.md
       - Icon: components/display/icon.md
+      - MapView: components/display/map-view.md
       - Markdown: components/display/markdown.md
       - Image: components/display/image.md
       - Carousel: components/display/carousel.md

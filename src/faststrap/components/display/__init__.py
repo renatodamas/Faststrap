@@ -6,6 +6,7 @@ from .carousel import Carousel, CarouselItem
 from .empty_state import EmptyState
 from .figure import Figure
 from .image import Image
+from .map_view import MapView
 from .markdown import Markdown, render_markdown
 from .sheet import Sheet
 from .stat_card import StatCard
@@ -20,6 +21,7 @@ __all__ = [
     "EmptyState",
     "Figure",
     "Image",
+    "MapView",
     "Markdown",
     "render_markdown",
     "Sheet",
