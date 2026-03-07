@@ -52,6 +52,13 @@ def Sheet(
         if height != "auto":
             user_style["height"] = height
             user_style["max-height"] = "90vh"  # Never full full screen to keep context
+    elif isinstance(user_style, str):
+        style_str = user_style.strip()
+        if height != "auto":
+            sheet_height = f"height: {height}; max-height: 90vh;"
+            user_style = f"{sheet_height} {style_str}" if style_str else sheet_height
+        else:
+            user_style = style_str
 
     return Drawer(
         *children, drawer_id=sheet_id, title=title, cls=final_cls, style=user_style, **kwargs

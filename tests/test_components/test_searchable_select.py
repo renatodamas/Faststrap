@@ -150,3 +150,18 @@ def test_searchable_select_escapes_user_supplied_select_id_in_js():
     assert "alert(1)" in html  # still present as data, but escaped in string literal
     assert 'getElementById("x&#39;);alert(1);//")' in html
     assert "getElementById('x');alert(1);//')" not in html
+
+
+def test_searchable_select_csp_safe_avoids_inline_handlers():
+    """CSP-safe mode should avoid hx-on-click inline handlers."""
+    select = SearchableSelect(
+        endpoint="/api/search",
+        name="user_id",
+        select_id="user-select",
+        csp_safe=True,
+        initial_options=[("1", "Alice")],
+    )
+    html = to_xml(select)
+    assert "hx-on-click" not in html
+    assert 'data-fs-searchable-select="true"' in html
+    assert 'data-fs-searchable-option="true"' in html

@@ -25,6 +25,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Extended deployment documentation and navigation coverage (including Render).
 - Release docs (`README.md`, `ROADMAP.md`) aligned to current pre-v0.6 delivery state.
+- `SearchableSelect` now supports `csp_safe=True` to avoid per-option inline click handlers.
 
 ### Fixed
 
@@ -34,6 +35,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - requested dataframe columns exist
 - `Form.from_pydantic()` optional type detection improved for `X | None` unions.
 - `Form.from_pydantic()` now maps field descriptions to `FormGroup` help text.
+- Deterministic auto-ID generation for interactive components (`Accordion`, `Carousel`, `Modal`, `SearchableSelect`) to reduce HTMX fragment ID drift.
+- `GlassNavbar` now preserves string `style` values.
+- CDN fallback now correctly uses `@main` reference instead of `@vmain` in editable/dev mode.
+- `add_bootstrap()` duplicate-call guard now only marks success after setup completes.
+- `Sheet` now merges height behavior for both dict and string `style` values.
+- `convert_attrs()` now normalizes complex `css_vars`/`data`/`aria` values and preserves boolean false as `"false"` for structured attributes.
 
 ### Quality
 
@@ -41,11 +48,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - map input validation
   - dataframe bridge validation paths
   - pydantic description/help-text mapping
+  - deterministic ID behavior
+  - `attrs.convert_attrs` edge cases
+  - `BottomNav`/`Sheet` coverage
+  - `SearchableSelect` CSP-safe rendering path
 - Full gate pass:
   - `ruff check .`
   - `black --check .`
   - `mypy .`
-  - `pytest -q` (627 passed)
+  - `pytest -q` (646 passed)
 
 ## [0.5.8] - 2026-03-06
 

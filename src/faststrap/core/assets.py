@@ -271,10 +271,51 @@ INIT_SCRIPT_JS = """
             });
         };
 
+        const initSearchableSelect = (scope) => {
+            scope.querySelectorAll('[data-fs-searchable-select="true"]').forEach(container => {
+                if (container.dataset.fsSearchableInit === 'true') return;
+                container.dataset.fsSearchableInit = 'true';
+
+                container.addEventListener('click', (e) => {
+                    const option = e.target.closest('[data-fs-searchable-option="true"]');
+                    if (!option || !container.contains(option)) return;
+                    e.preventDefault();
+
+                    const selectId = option.dataset.fsSelectId;
+                    const inputId = option.dataset.fsInputId;
+                    const resultsId = option.dataset.fsResultsId;
+                    if (!selectId) return;
+
+                    const hiddenSelect = document.getElementById(selectId);
+                    if (!hiddenSelect) return;
+
+                    const value = option.dataset.fsValue || '';
+                    const label = option.dataset.fsLabel || option.textContent || '';
+
+                    hiddenSelect.innerHTML = '';
+                    const selectedOption = document.createElement('option');
+                    selectedOption.value = value;
+                    selectedOption.text = label;
+                    selectedOption.selected = true;
+                    hiddenSelect.appendChild(selectedOption);
+
+                    if (inputId) {
+                        const input = document.getElementById(inputId);
+                        if (input) input.value = label;
+                    }
+                    if (resultsId) {
+                        const results = document.getElementById(resultsId);
+                        if (results) results.innerHTML = '';
+                    }
+                });
+            });
+        };
+
         initBS(document);
         initToggleGroups(document);
         initTextClamp(document);
         initFocusTraps(document);
+        initSearchableSelect(document);
 
         // HTMX support: Re-initialize on content swap
         document.body.addEventListener('htmx:afterSwap', (evt) => {
@@ -282,6 +323,7 @@ INIT_SCRIPT_JS = """
             initToggleGroups(evt.detail.elt);
             initTextClamp(evt.detail.elt);
             initFocusTraps(evt.detail.elt);
+            initSearchableSelect(evt.detail.elt);
         });
     });
 """

@@ -48,6 +48,7 @@ def SearchableSelect(
     required: bool = False,
     size: SizeType | None = None,
     select_id: str | None = None,
+    csp_safe: bool = False,
     **kwargs: Any,
 ) -> Div:
     """Server-side searchable dropdown using HTMX.
@@ -64,6 +65,8 @@ def SearchableSelect(
         debounce: Milliseconds to wait after typing before searching
         min_chars: Minimum characters before triggering search
         select_id: Unique ID for the select element
+        csp_safe: Avoid inline click handlers by using delegated listeners
+            from FastStrap init script.
         **kwargs: Additional HTML attributes
 
     Returns:
@@ -166,29 +169,38 @@ def SearchableSelect(
     # Build initial options as list-group items
     option_elements = []
     for value, text in initial_options:
-        option_elements.append(
-            A(
-                text,
-                href="#",
-                cls="list-group-item list-group-item-action",
-                data_value=value,
-                hx_on_click=(
-                    "event.preventDefault();"
-                    f"const sel=document.getElementById({safe_select_id});"
-                    "if(!sel){return;}"
-                    "sel.innerHTML='';"
-                    "const opt=document.createElement('option');"
-                    f"opt.value={json.dumps(value)};"
-                    f"opt.text={json.dumps(text)};"
-                    "opt.selected=true;"
-                    "sel.appendChild(opt);"
-                    f"const inp=document.getElementById({safe_input_id});"
-                    f"if(inp){{inp.value={json.dumps(text)};}}"
-                    f"const box=document.getElementById({safe_results_id});"
-                    "if(box){box.innerHTML='';}"
-                ),
+        option_attrs: dict[str, Any] = {
+            "href": "#",
+            "cls": "list-group-item list-group-item-action",
+            "data_value": value,
+        }
+        if csp_safe:
+            option_attrs.update(
+                {
+                    "data_fs_searchable_option": "true",
+                    "data_fs_select_id": select_id,
+                    "data_fs_input_id": input_id,
+                    "data_fs_results_id": results_id,
+                    "data_fs_label": text,
+                }
             )
-        )
+        else:
+            option_attrs["hx_on_click"] = (
+                "event.preventDefault();"
+                f"const sel=document.getElementById({safe_select_id});"
+                "if(!sel){return;}"
+                "sel.innerHTML='';"
+                "const opt=document.createElement('option');"
+                f"opt.value={json.dumps(value)};"
+                f"opt.text={json.dumps(text)};"
+                "opt.selected=true;"
+                "sel.appendChild(opt);"
+                f"const inp=document.getElementById({safe_input_id});"
+                f"if(inp){{inp.value={json.dumps(text)};}}"
+                f"const box=document.getElementById({safe_results_id});"
+                "if(box){box.innerHTML='';}"
+            )
+        option_elements.append(A(text, **option_attrs))
 
     # Build results container
     results_container = Div(
@@ -216,6 +228,8 @@ def SearchableSelect(
     all_classes = merge_classes(" ".join(base_classes), user_cls)
 
     attrs: dict[str, Any] = {"cls": all_classes}
+    if csp_safe:
+        attrs["data_fs_searchable_select"] = "true"
     attrs.update(convert_attrs(kwargs))
 
     return Div(

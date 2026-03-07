@@ -12,6 +12,7 @@ This module also provides lightweight support for:
 
 from __future__ import annotations
 
+import json
 from typing import Any
 
 
@@ -35,8 +36,19 @@ def _style_to_string(style: dict[str, Any]) -> str:
     for k, v in style.items():
         if v is None:
             continue
-        parts.append(f"{_css_key(str(k))}: {v}")
+        parts.append(f"{_css_key(str(k))}: {_stringify_attr_value(v)}")
     return "; ".join(parts)
+
+
+def _stringify_attr_value(value: Any) -> str:
+    """Convert arbitrary values to stable attribute-safe strings."""
+    if isinstance(value, bool):
+        return "true" if value else "false"
+    if isinstance(value, (str, int, float)):
+        return str(value)
+    if isinstance(value, (list, tuple, set, dict)):
+        return json.dumps(value, sort_keys=True, default=str)
+    return str(value)
 
 
 def _merge_style(existing: str | None, addition: str | None) -> str | None:
@@ -122,9 +134,10 @@ def convert_attrs(kwargs: dict[str, Any]) -> dict[str, Any]:
         for dk, dv in data_val.items():
             if dv is None:
                 continue
-            if isinstance(dv, bool) and dv is False:
-                continue
-            converted[f"data-{_to_kebab(str(dk))}"] = dv
+            if isinstance(dv, bool):
+                converted[f"data-{_to_kebab(str(dk))}"] = "true" if dv else "false"
+            else:
+                converted[f"data-{_to_kebab(str(dk))}"] = _stringify_attr_value(dv)
 
     if isinstance(aria_val, dict):
         for ak, av in aria_val.items():
@@ -133,7 +146,7 @@ def convert_attrs(kwargs: dict[str, Any]) -> dict[str, Any]:
             if isinstance(av, bool):
                 converted[f"aria-{_to_kebab(str(ak))}"] = "true" if av else "false"
             else:
-                converted[f"aria-{_to_kebab(str(ak))}"] = av
+                converted[f"aria-{_to_kebab(str(ak))}"] = _stringify_attr_value(av)
 
     # ---- Apply merged style if present ------------------------------------
     if style_str:
