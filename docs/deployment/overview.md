@@ -1,4 +1,4 @@
-# Deploying Faststrap Apps
+ï»¿# Deploying Faststrap Apps
 
 Faststrap apps are FastHTML/ASGI applications. The right deployment platform depends on whether your app needs persistent features such as SSE, WebSockets, background workers, or in-memory process state.
 
@@ -7,14 +7,14 @@ Faststrap apps are FastHTML/ASGI applications. The right deployment platform dep
 ```text
 Does your app need SSE, WebSockets, or background workers?
 |
-|-- YES -> Railway (easiest) · Fly.io (production) · VPS (full control)
+|-- YES -> Railway (easiest) - Fly.io (production) - VPS (full control)
 |
 `-- NO -- Is your app completely stateless?
           (reads from external DB only, no in-memory dicts)
           |
-          |-- YES -> Vercel (recommended) · Cloud Run · AWS Lambda
+          |-- YES -> Vercel (recommended) - Cloud Run - AWS Lambda
           |
-          `-- NO --> Railway · Render · Fly.io
+          `-- NO --> Railway - Render - Fly.io
 ```
 
 ## Platform Comparison
@@ -28,7 +28,7 @@ Does your app need SSE, WebSockets, or background workers?
 | Koyeb | PaaS | Yes | Yes (No sleep) | Always-on free tier |
 | Google Cloud Run | Serverless container | Limited | Yes (2M req/mo) | GCP ecosystem |
 | AWS Lambda | Serverless | No | Yes (1M req/mo) | AWS ecosystem |
-| Hetzner VPS | Infrastructure | Yes | No (€3.29/mo) | Full control, best price/perf |
+| Hetzner VPS | Infrastructure | Yes | No (EUR 3.29/mo) | Full control, best price/perf |
 
 ## Cloudflare Compatibility
 
