@@ -5,7 +5,10 @@ from __future__ import annotations
 from enum import Enum
 from typing import Literal
 
+import pytest
 from fasthtml.common import to_xml
+
+pytest.importorskip("pydantic")
 from pydantic import BaseModel, EmailStr
 
 from faststrap.components.forms.form import Form

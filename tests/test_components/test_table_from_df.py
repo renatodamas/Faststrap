@@ -2,10 +2,12 @@
 
 from __future__ import annotations
 
-import pandas as pd
+import pytest
 from fasthtml.common import to_xml
 
 from faststrap.components.display import Table
+
+pd = pytest.importorskip("pandas")
 
 
 def test_table_from_df_with_pandas_dataframe() -> None:
