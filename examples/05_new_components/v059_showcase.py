@@ -16,7 +16,7 @@ This demo covers:
 
 from __future__ import annotations
 
-from fasthtml.common import H1, H5, Div, FastHTML, Hr, P, Small, Strong, em, serve
+from fasthtml.common import H1, H5, Div, FastHTML, Hr, P, Small, Strong, serve
 
 from faststrap import (
     Alert,
@@ -39,6 +39,7 @@ add_pwa(
     short_name="FS 0.5.9",
     description="Detailed demo for Faststrap v0.5.9 features",
     theme_color="#0d6efd",
+    icon_path="https://placehold.co/512x512.png",
     service_worker=True,
     enable_background_sync=True,
     background_sync_tag="faststrap-demo-sync",
@@ -179,10 +180,10 @@ def home():
             H5("4) MapView (Experimental)"),
             P("Leaflet-based map with optional assets and marker popup."),
             *MapView(
-                latitude=6.5244,
-                longitude=3.3792,
+                latitude=7.4969,
+                longitude=9.0567,
                 zoom=11,
-                popup_text="Lagos, Nigeria",
+                popup_text="Ilorin, Nigeria",
                 include_assets=True,
             ),
             cls="mb-4",
@@ -203,7 +204,7 @@ def home():
                 "This app enables: background sync registration, push scaffolding, and route cache policies."
             ),
             P("Check manifest and service worker routes:"),
-            Small(em("/manifest.json, /sw.js, /offline"), cls="text-muted"),
+            Small("/manifest.json, /sw.js, /offline", cls="text-muted"),
         ),
         cls="my-4",
     )
