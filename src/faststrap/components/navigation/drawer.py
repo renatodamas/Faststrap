@@ -24,6 +24,8 @@ def Drawer(
     backdrop: bool | None = None,
     scroll: bool | None = None,
     dark: bool | None = None,
+    focus_trap: bool | None = None,
+    autofocus_selector: str | None = None,
     header_cls: str | None = None,
     body_cls: str | None = None,
     footer_cls: str | None = None,
@@ -42,6 +44,8 @@ def Drawer(
         backdrop: Show backdrop overlay
         scroll: Allow body scroll when drawer is open
         dark: Use dark variant (Bootstrap 5.3+)
+        focus_trap: Trap keyboard focus inside the drawer
+        autofocus_selector: CSS selector for the element to autofocus
         **kwargs: Additional HTML attributes (cls, hx-*, data-*, etc.)
 
     Returns:
@@ -54,6 +58,8 @@ def Drawer(
         backdrop=backdrop,
         scroll=scroll,
         dark=dark,
+        focus_trap=focus_trap,
+        autofocus_selector=autofocus_selector,
         header_cls=header_cls,
         body_cls=body_cls,
         footer_cls=footer_cls,
@@ -65,6 +71,8 @@ def Drawer(
     c_backdrop = cfg.get("backdrop", True)
     c_scroll = cfg.get("scroll", False)
     c_dark = cfg.get("dark", False)
+    c_focus_trap = cfg.get("focus_trap", False)
+    c_autofocus_selector = cfg.get("autofocus_selector")
     c_header_cls = cfg.get("header_cls", "")
     c_body_cls = cfg.get("body_cls", "")
     c_footer_cls = cfg.get("footer_cls", "")
@@ -102,6 +110,10 @@ def Drawer(
         attrs["data_bs_backdrop"] = "false"
     if c_scroll:
         attrs["data_bs_scroll"] = "true"
+    if c_focus_trap:
+        attrs["data_fs_focus_trap"] = "true"
+    if c_autofocus_selector:
+        attrs["data_fs_autofocus"] = c_autofocus_selector
 
     # Convert remaining kwargs
     attrs.update(convert_attrs(kwargs))

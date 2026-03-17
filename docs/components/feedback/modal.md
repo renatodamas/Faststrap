@@ -152,6 +152,19 @@ Modal(
 
 ---
 
+## Focus Trap (Accessibility)
+
+Trap keyboard focus inside the modal and optionally set autofocus:
+
+```python
+Modal(
+    "Secure content",
+    title="Accessible Dialog",
+    focus_trap=True,
+    autofocus_selector="#first-field",
+)
+```
+
 ## Parameter Reference
 
 | FastStrap Param | Type | Bootstrap Attribute | Description |

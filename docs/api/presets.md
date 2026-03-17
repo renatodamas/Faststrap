@@ -173,6 +173,20 @@ LoadingButton(
 )
 ```
 
+### SSEStream
+
+Server‑Sent Events stream helper.
+
+```python
+from faststrap.presets import SSEStream, sse_event
+
+@app.get("/api/stream")
+async def stream():
+    async def gen():
+        yield sse_event("Hello")
+    return SSEStream(gen())
+```
+
 ---
 
 ## Response Helpers
@@ -389,6 +403,7 @@ def get_posts_page(page: int = 1):
 | `AutoRefresh` | `endpoint`, `target`, `interval` | Auto-polling element |
 | `LazyLoad` | `endpoint`, `placeholder`, `trigger` | Lazy-loaded content |
 | `LoadingButton` | `text`, `endpoint`, `target`, `method` | Button with loading state |
+| `SSEStream` | `events`, `headers` | Server-Sent Events response |
 
 ### Response Helpers
 

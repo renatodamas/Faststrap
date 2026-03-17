@@ -100,13 +100,20 @@ nav:
       - Checkbox & Switch: components/forms/checks.md
       - FileInput: components/forms/file-input.md
       - FormGroup: components/forms/formgroup.md
+      - FilterBar: components/forms/filter-bar.md
+      - DateRangePicker: components/forms/date-range-picker.md
+      - MultiSelect: components/forms/multi-select.md
+      - RangeSlider: components/forms/range-slider.md
+      - ExportButton: components/forms/export-button.md
       - Form Builder: components/forms/form-builder.md
       - SearchableSelect: components/forms/searchable-select.md
       - ThemeToggle: components/forms/theme-toggle.md
       - ToggleGroup: components/forms/toggle-group.md
     - Display:
       - Card: components/display/card.md
+      - Chart: components/display/chart.md
       - Table: components/display/table.md
+      - DataTable: components/display/data-table.md
       - Figure: components/display/figure.md
       - Badge: components/display/badge.md
       - Icon: components/display/icon.md
@@ -118,6 +125,7 @@ nav:
       - Empty State: components/display/empty_state.md
       - Stat Card: components/display/stat_card.md
       - TextClamp: components/display/text-clamp.md
+      - SSETarget: components/display/sse-target.md
     - Feedback:
       - Alert: components/feedback/alert.md
       - Modal: components/feedback/modal.md
@@ -130,6 +138,7 @@ nav:
       - Error Dialog: components/feedback/error-dialog.md
       - Install Prompt: components/feedback/install-prompt.md
       - Notification Presets: components/feedback/notification-presets.md
+      - Notification Center: components/feedback/notification-center.md
     - Navigation:
       - Navbar: components/navigation/navbar.md
       - Tabs: components/navigation/tabs.md
@@ -147,6 +156,7 @@ nav:
     - Layout:
       - Grid: components/layout/grid.md
       - Hero: components/layout/hero.md
+      - DashboardGrid: components/layout/dashboard-grid.md
   - HTMX Presets:
     - Overview: presets/index.md
     - ActiveSearch: presets/active-search.md
@@ -156,6 +166,7 @@ nav:
     - LoadingButton: presets/loading-button.md
     - OptimisticAction: presets/optimistic-action.md
     - LocationAction: presets/location-action.md
+    - SSEStream: presets/sse-stream.md
     - Response Helpers: presets/responses.md
     - Route Protection: presets/require-auth.md
   - Layouts:

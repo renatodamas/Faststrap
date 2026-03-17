@@ -38,6 +38,21 @@ StatCard(
 
 ---
 
+## v0.6.0 Metric Cards
+
+FastStrap also ships specialized dashboard cards:
+
+```python
+MetricCard("Revenue", "$128k", delta="+12%", delta_type="up")
+TrendCard("Active Users", "9,842", sparkline="<svg></svg>", sparkline_safe=True)
+KPICard(
+    "KPIs",
+    metrics=[("Retention", "84%", "+2%", "up"), ("Churn", "3.1%", "-0.4%", "down")],
+)
+```
+
+---
+
 ## Visual Examples & Use Cases
 
 ### 1. Negative Trends

@@ -175,3 +175,15 @@ def test_modal_multiple_children():
     assert "First." in html
     assert "Second." in html
     assert "Third." in html
+
+
+def test_modal_focus_trap_attributes():
+    modal = Modal(
+        "Content",
+        modal_id="trapModal",
+        focus_trap=True,
+        autofocus_selector="#first-field",
+    )
+    html = to_xml(modal)
+    assert 'data-fs-focus-trap="true"' in html
+    assert 'data-fs-autofocus="#first-field"' in html

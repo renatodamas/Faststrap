@@ -42,6 +42,7 @@ from .components.display import (
     THead,
     TrendCard,
     TRow,
+    datatable_export_params,
 )
 
 # Feedback
@@ -85,6 +86,7 @@ from .components.forms import (
     FilterBar,
     FloatingLabel,
     Form,
+    FormErrorSummary,
     FormGroup,
     FormGroupFromErrors,
     Input,
@@ -198,6 +200,7 @@ __all__ = [
     "FileInput",
     "Form",
     "FormGroup",
+    "FormErrorSummary",
     "DateRangePicker",
     "ExportButton",
     "FilterBar",
@@ -224,6 +227,7 @@ __all__ = [
     "CarouselItem",
     "Chart",
     "DataTable",
+    "datatable_export_params",
     "EmptyState",
     "Figure",
     "Image",

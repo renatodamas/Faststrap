@@ -172,6 +172,18 @@ def register(req):
     return hx_redirect("/dashboard")
 ```
 
+### Form Error Summary
+
+Render a compact error alert at the top of the form:
+
+```python
+FormErrorSummary(
+    errors,
+    title="Please fix the following",
+    variant="danger",
+)
+```
+
 ### HTMX Live Validation
 
 Validate as users type.

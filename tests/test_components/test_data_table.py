@@ -43,3 +43,23 @@ def test_data_table_search_input():
     assert 'type="search"' in html
     assert 'name="q"' in html
     assert 'value="al"' in html
+
+
+def test_data_table_export_params_helper():
+    params = DataTable.export_params(
+        sort="name",
+        direction="desc",
+        search="al",
+        filters={"team": "ops", "active": True, "empty": None},
+        include_pagination=True,
+        page=2,
+        per_page=50,
+    )
+    assert params["sort"] == "name"
+    assert params["direction"] == "desc"
+    assert params["q"] == "al"
+    assert params["team"] == "ops"
+    assert params["active"] == "true"
+    assert "empty" not in params
+    assert params["page"] == 2
+    assert params["per_page"] == 50

@@ -79,6 +79,47 @@ def _build_url(base_url: str, params: dict[str, Any]) -> str:
     return urlunsplit((parts.scheme, parts.netloc, parts.path, query, parts.fragment))
 
 
+def datatable_export_params(
+    *,
+    sort: str | None = None,
+    direction: SortableDirection = "asc",
+    search: str | None = None,
+    search_param: str = "q",
+    filters: dict[str, Any] | None = None,
+    include_pagination: bool = False,
+    page: int | None = None,
+    per_page: int | None = None,
+) -> dict[str, Any]:
+    """Build query params for exporting DataTable state.
+
+    This helper mirrors the DataTable query contract and is intended to be passed
+    into ExportButton(extra_params=...).
+    """
+    params: dict[str, Any] = {}
+
+    if filters:
+        for key, value in filters.items():
+            normalized = _normalize_query_value(value)
+            if normalized is None:
+                continue
+            params[str(key)] = normalized
+
+    if sort:
+        params["sort"] = sort
+        params["direction"] = direction
+
+    if search is not None:
+        params[search_param] = search
+
+    if include_pagination:
+        if page is not None:
+            params["page"] = page
+        if per_page is not None:
+            params["per_page"] = per_page
+
+    return params
+
+
 def _link_attrs(
     url: str,
     *,
@@ -417,3 +458,6 @@ def DataTable(
     wrapper_attrs.update(convert_attrs(kwargs))
 
     return Div(*parts, **wrapper_attrs)
+
+
+DataTable.export_params = datatable_export_params  # type: ignore[attr-defined]

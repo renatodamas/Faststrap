@@ -110,6 +110,20 @@ Drawer(
 
 ---
 
+## Focus Trap (Accessibility)
+
+Trap keyboard focus inside the drawer and optionally set autofocus:
+
+```python
+Drawer(
+    "Drawer content",
+    drawer_id="settings",
+    title="Settings",
+    focus_trap=True,
+    autofocus_selector="#first-input",
+)
+```
+
 ## Bootstrap CSS Classes Explained
 
 | Class | Purpose |

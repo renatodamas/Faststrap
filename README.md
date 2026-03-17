@@ -515,7 +515,6 @@ Comprehensive examples organized by learning path:
 ### Deferred to post-v0.6 (intentional)
 
 - Rich DataTable query APIs + optional ORM bridges
-- SSE/realtime helper layer
 - Production map provider integrations and geospatial presets
 - Advanced PWA reliability presets (queue persistence/retry telemetry)
 
@@ -527,13 +526,15 @@ Comprehensive examples organized by learning path:
 - `v0.5.9`: markdown/map/data bridges + PWA foundations
 - `v0.6.0`: advanced data APIs + realtime/preset hardening
 
-###  Phase 6+ (v0.6.0+)
+###  Phase 6+ (post v0.6.0)
 
-- **Data Science Components**: DataTable, Chart, MetricCard, TrendCard
-- **Dashboard Layouts**: DashboardLayout, DashboardGrid, FilterBar
-- **Advanced Forms**: Form.from_pydantic(), DateRangePicker, MultiSelect
-- **FormWizard**, **Stepper**
-- **Timeline**, **ProfileDropdown**, **SearchBar**
+- **Layout primitives**: Stack, Cluster, Center, Switcher, Sidebar
+- **Data tooling**: DataFrameViewer (virtualized), DataProfiler, ModelReport layout
+- **Chart presets**: common analysis plots + insight helpers
+- **Form extensions**: FormWizard, Stepper, error summary patterns
+- **UI extensions**: Timeline, ProfileDropdown, SearchBar
+- **Icon packs**: optional icon registries beyond Bootstrap Icons
+- **Notebook helpers**: render-to-HTML convenience for notebooks
 - **Carousel**, **MegaMenu**, **NotificationCenter**
 - And 40+ more components...
 

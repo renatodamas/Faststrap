@@ -2,6 +2,8 @@
 
 The `Table` component enables you to display tabular data efficiently. FastStrap's implementation decomposes the table into semantic sub-components (`THead`, `TBody`, `TRow`, `TCell`) for maximum flexibility, while providing high-level arguments for common styles like striping and hover effects.
 
+For sorting, search, and pagination, see `DataTable`.
+
 !!! tip "Bootstrap Reference"
     [Bootstrap 5 Tables](https://getbootstrap.com/docs/5.3/content/tables/)
 

@@ -15,6 +15,7 @@ Most SaaS frontends ship custom JavaScript for:
 - Loading buttons → **LoadingButton**
 - Optimistic mutation flows → **OptimisticAction**
 - Browser location actions → **LocationAction**
+- Realtime streaming → **SSEStream**
 
 FastStrap replaces all of these with **zero JavaScript**.
 
@@ -31,6 +32,7 @@ from faststrap.presets import (
     LocationAction,
     LoadingButton,
     OptimisticAction,
+    SSEStream,
 )
 ```
 

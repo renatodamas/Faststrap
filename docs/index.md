@@ -87,8 +87,8 @@ def home():
 
 ## Features
 
-- **67 Components**: From Buttons to Modals, Navbars to Tables, SearchableSelect to ErrorPage.
-- **HTMX Presets**: ActiveSearch, InfiniteScroll, AutoRefresh, LazyLoad, LoadingButton, OptimisticAction, LocationAction  zero JS.
+- **110+ exports**: Components and helpers across forms, display, navigation, and layouts.
+- **HTMX Presets**: ActiveSearch, InfiniteScroll, AutoRefresh, LazyLoad, LoadingButton, OptimisticAction, LocationAction, SSEStream.
 - **SEO Module**: SEO meta tags, Open Graph, Twitter Cards, and JSON-LD structured data.
 - **PWA Module**: one-call installable app setup (manifest, service worker, install flow).
 - **Zero Build Step**: No webpack, no npm, no node_modules.
@@ -99,10 +99,20 @@ def home():
 
 ## Stats
 
-- **93 components** implemented.
-- **569+ tests** passing.
-- **7 interaction presets** + **6 response helpers** + **1 auth decorator**.
+- **110+ exports** implemented.
+- **670+ tests** passing.
+- **7 interaction presets** + **6 response helpers** + **1 auth decorator** + **SSEStream**.
 - **100% Python**.
+
+## Future Releases
+
+- **Layout primitives**: Stack, Cluster, Center, Switcher, Sidebar
+- **Data tooling**: DataFrameViewer (virtualized), DataProfiler, ModelReport layout
+- **Chart presets**: common analysis plots + insight helpers
+- **Form extensions**: FormWizard, Stepper, error summary patterns
+- **UI extensions**: Timeline, ProfileDropdown, SearchBar
+- **Icon packs**: optional icon registries beyond Bootstrap Icons
+- **Notebook helpers**: render-to-HTML convenience for notebooks
 
 ## License
 

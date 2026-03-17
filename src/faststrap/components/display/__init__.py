@@ -4,7 +4,7 @@ from .badge import Badge
 from .card import Card
 from .carousel import Carousel, CarouselItem
 from .chart import Chart
-from .data_table import DataTable
+from .data_table import DataTable, datatable_export_params
 from .empty_state import EmptyState
 from .figure import Figure
 from .image import Image
@@ -23,6 +23,7 @@ __all__ = [
     "CarouselItem",
     "Chart",
     "DataTable",
+    "datatable_export_params",
     "EmptyState",
     "Figure",
     "Image",

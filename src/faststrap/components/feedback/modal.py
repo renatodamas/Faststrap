@@ -65,6 +65,8 @@ def Modal(
     ) = None,
     static_backdrop: bool | None = None,
     fade: bool | None = None,
+    focus_trap: bool | None = None,
+    autofocus_selector: str | None = None,
     dialog_cls: str | None = None,
     content_cls: str | None = None,
     header_cls: str | None = None,
@@ -87,6 +89,8 @@ def Modal(
         fullscreen: Full-screen modal
         static_backdrop: Clicking backdrop doesn't close modal
         fade: Use fade animation
+        focus_trap: Trap keyboard focus inside the modal
+        autofocus_selector: CSS selector for the element to autofocus
         **kwargs: Additional HTML attributes (cls, hx-*, data-*, etc.)
     """
     # Resolve API defaults
@@ -98,6 +102,8 @@ def Modal(
         fullscreen=fullscreen,
         static_backdrop=static_backdrop,
         fade=fade,
+        focus_trap=focus_trap,
+        autofocus_selector=autofocus_selector,
         dialog_cls=dialog_cls,
         content_cls=content_cls,
         header_cls=header_cls,
@@ -113,6 +119,8 @@ def Modal(
     c_fullscreen = cfg.get("fullscreen", False)
     c_static_backdrop = cfg.get("static_backdrop", False)
     c_fade = cfg.get("fade", True)
+    c_focus_trap = cfg.get("focus_trap", False)
+    c_autofocus_selector = cfg.get("autofocus_selector")
     c_dialog_cls = cfg.get("dialog_cls", "")
     c_content_cls = cfg.get("content_cls", "")
     c_header_cls = cfg.get("header_cls", "")
@@ -195,7 +203,14 @@ def Modal(
         content_parts.append(footer_div)
 
     # Assemble modal
-    modal_content = Div(*content_parts, cls=merge_classes("modal-content", c_content_cls))
+    content_attrs: dict[str, Any] = {
+        "cls": merge_classes("modal-content", c_content_cls),
+    }
+    if c_focus_trap:
+        content_attrs["data_fs_focus_trap"] = "true"
+    if c_autofocus_selector:
+        content_attrs["data_fs_autofocus"] = c_autofocus_selector
+    modal_content = Div(*content_parts, **content_attrs)
     modal_dialog = Div(modal_content, cls=merge_classes(" ".join(dialog_classes), c_dialog_cls))
 
     return Div(modal_dialog, id=modal_id, **attrs)

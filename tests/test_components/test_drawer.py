@@ -123,3 +123,15 @@ def test_drawer_multiple_children():
     assert "First." in html
     assert "Second." in html
     assert "Third." in html
+
+
+def test_drawer_focus_trap_attributes():
+    drawer = Drawer(
+        "Content",
+        drawer_id="trapDrawer",
+        focus_trap=True,
+        autofocus_selector="#first-item",
+    )
+    html = to_xml(drawer)
+    assert 'data-fs-focus-trap="true"' in html
+    assert 'data-fs-autofocus="#first-item"' in html

@@ -24,6 +24,7 @@ from .display import (
     THead,
     TrendCard,
     TRow,
+    datatable_export_params,
 )
 from .feedback import (
     Alert,
@@ -63,6 +64,7 @@ from .forms import (
     FilterBar,
     FloatingLabel,
     Form,
+    FormErrorSummary,
     FormGroup,
     FormGroupFromErrors,
     Input,
@@ -142,6 +144,7 @@ __all__ = [
     "extract_field_error",
     "map_formgroup_validation",
     "FormGroup",
+    "FormErrorSummary",
     "FormGroupFromErrors",
     "Badge",
     "Card",
@@ -149,6 +152,7 @@ __all__ = [
     "CarouselItem",
     "Chart",
     "DataTable",
+    "datatable_export_params",
     "EmptyState",
     "Figure",
     "Image",
