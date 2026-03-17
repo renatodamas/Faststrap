@@ -18,6 +18,20 @@ Single app that demonstrates:
 python examples/05_new_components/v060_data_foundations.py
 ```
 
+### `v060_theme_adapted.py` - Theme-Aware Components Demo
+
+Single app that demonstrates:
+
+- Theme overrides with `create_theme()`
+- Component hook classes for custom styling
+- `NotificationCenter` + `ExportButton`
+
+**Run:**
+
+```bash
+python examples/05_new_components/v060_theme_adapted.py
+```
+
 ## New in v0.5.9
 
 ### `v059_showcase.py` - Detailed v0.5.9 Feature Demo

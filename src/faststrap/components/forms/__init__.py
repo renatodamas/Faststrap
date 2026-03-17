@@ -5,6 +5,7 @@ from .buttongroup import ButtonGroup, ButtonToolbar
 from .checks import Checkbox, Radio, Range, Switch
 from .date_range_picker import DateRangePicker
 from .errors import FormGroupFromErrors, extract_field_error, map_formgroup_validation
+from .export_button import ExportButton
 from .file import FileInput
 from .filter_bar import FilterBar
 from .form import Form
@@ -33,6 +34,7 @@ __all__ = [
     "FormGroup",
     "FilterBar",
     "DateRangePicker",
+    "ExportButton",
     "extract_field_error",
     "map_formgroup_validation",
     "FormGroupFromErrors",

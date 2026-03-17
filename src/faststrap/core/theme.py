@@ -524,6 +524,21 @@ _DEFAULT_COMPONENT_DEFAULTS: dict[str, dict[str, Any]] = {
         "show_value": True,
         "value_suffix": "",
     },
+    "ExportButton": {
+        "export_format": "csv",
+        "method": "get",
+        "use_hx": False,
+        "hx_swap": "none",
+        "push_url": False,
+        "variant": "secondary",
+        "outline": True,
+    },
+    "NotificationCenter": {
+        "badge_variant": "danger",
+        "empty_text": "No notifications",
+        "hx_swap": "innerHTML",
+        "push_url": False,
+    },
 }
 
 # Mutable working copy of defaults (can be modified via set_component_defaults)
