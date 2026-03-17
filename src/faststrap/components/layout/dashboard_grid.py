@@ -9,6 +9,7 @@ from fasthtml.common import Div
 from ...core._stability import beta
 from ...core.base import merge_classes
 from ...core.registry import register
+from ...core.theme import resolve_defaults
 from ...utils.attrs import convert_attrs
 
 
@@ -35,23 +36,35 @@ def DashboardGrid(
     **kwargs: Any,
 ) -> Div:
     """Responsive dashboard grid using CSS grid."""
-    if cols is not None and cols < 1:
-        msg = f"cols must be >= 1, got {cols}"
+    cfg = resolve_defaults(
+        "DashboardGrid",
+        cols=cols,
+        gap=gap,
+        min_card_width=min_card_width,
+        dense=dense,
+    )
+    c_cols = cfg.get("cols", cols)
+    c_gap = cfg.get("gap", gap)
+    c_min_card_width = cfg.get("min_card_width", min_card_width)
+    c_dense = cfg.get("dense", dense)
+
+    if c_cols is not None and c_cols < 1:
+        msg = f"cols must be >= 1, got {c_cols}"
         raise ValueError(msg)
 
     style: dict[str, Any] = {
         "display": "grid",
-        "gap": _normalize_size(gap),
+        "gap": _normalize_size(c_gap),
     }
 
-    if cols:
-        style["grid_template_columns"] = f"repeat({cols}, minmax(0, 1fr))"
+    if c_cols:
+        style["grid_template_columns"] = f"repeat({c_cols}, minmax(0, 1fr))"
     else:
         style["grid_template_columns"] = (
-            f"repeat(auto-fit, minmax({_normalize_px(min_card_width)}, 1fr))"
+            f"repeat(auto-fit, minmax({_normalize_px(c_min_card_width)}, 1fr))"
         )
 
-    if dense:
+    if c_dense:
         style["grid_auto_flow"] = "dense"
 
     user_style = kwargs.pop("style", None)

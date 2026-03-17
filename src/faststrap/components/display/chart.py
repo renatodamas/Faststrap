@@ -10,6 +10,7 @@ from fasthtml.common import Div, NotStr
 from ...core._stability import beta
 from ...core.base import merge_classes
 from ...core.registry import register
+from ...core.theme import resolve_defaults
 from ...utils.attrs import convert_attrs
 
 ChartBackend = Literal["matplotlib", "plotly", "altair", "svg", "html"]
@@ -66,6 +67,16 @@ def Chart(
         allow_unsafe_html: Allow raw HTML/SVG strings to be embedded.
         **kwargs: Additional HTML attributes for the wrapper.
     """
+    cfg = resolve_defaults(
+        "Chart",
+        responsive=responsive,
+        include_js=include_js,
+        allow_unsafe_html=allow_unsafe_html,
+    )
+    c_responsive = cfg.get("responsive", responsive)
+    c_include_js = cfg.get("include_js", include_js)
+    c_allow_unsafe_html = cfg.get("allow_unsafe_html", allow_unsafe_html)
+
     content: str
 
     if backend is None:
@@ -83,12 +94,12 @@ def Chart(
     if backend == "matplotlib":
         content = _matplotlib_to_svg(figure)
     elif backend in {"plotly", "altair"}:
-        content = _to_html(figure, include_js=include_js)
+        content = _to_html(figure, include_js=c_include_js)
     elif backend in {"svg", "html"}:
         if not isinstance(figure, str):
             msg = f"Chart backend '{backend}' expects a string input."
             raise TypeError(msg)
-        if not allow_unsafe_html:
+        if not c_allow_unsafe_html:
             msg = "allow_unsafe_html=True is required to embed raw HTML/SVG strings."
             raise ValueError(msg)
         content = figure
@@ -97,7 +108,7 @@ def Chart(
         raise ValueError(msg)
 
     classes = ["faststrap-chart"]
-    if responsive:
+    if c_responsive:
         classes.append("w-100")
 
     user_cls = kwargs.pop("cls", "")

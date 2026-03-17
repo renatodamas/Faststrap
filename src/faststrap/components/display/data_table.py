@@ -13,6 +13,7 @@ from fasthtml.common import A, Div, Form, Input, Li, Nav, Span, Ul
 from ...core._stability import beta
 from ...core.base import merge_classes
 from ...core.registry import register
+from ...core.theme import resolve_defaults
 from ...utils.attrs import convert_attrs
 from .table import Table, TBody, TCell, THead, TRow, _normalize_table_data
 
@@ -173,11 +174,38 @@ def DataTable(
         table_attrs: Extra attributes applied to the table element.
         **kwargs: Additional HTML attributes for the wrapper.
     """
-    if pagination and page < 1:
+    cfg = resolve_defaults(
+        "DataTable",
+        striped=striped,
+        hover=hover,
+        bordered=bordered,
+        responsive=responsive,
+        sortable=sortable,
+        searchable=searchable,
+        pagination=pagination,
+        per_page=per_page,
+        direction=direction,
+        empty_text=empty_text,
+        none_as=none_as,
+    )
+
+    c_striped = cfg.get("striped", striped)
+    c_hover = cfg.get("hover", hover)
+    c_bordered = cfg.get("bordered", bordered)
+    c_responsive = cfg.get("responsive", responsive)
+    c_sortable = cfg.get("sortable", sortable)
+    c_searchable = cfg.get("searchable", searchable)
+    c_pagination = cfg.get("pagination", pagination)
+    c_per_page = cfg.get("per_page", per_page)
+    c_direction = cfg.get("direction", direction)
+    c_empty_text = cfg.get("empty_text", empty_text)
+    c_none_as = cfg.get("none_as", none_as)
+
+    if c_pagination and page < 1:
         msg = f"page must be >= 1, got {page}"
         raise ValueError(msg)
-    if pagination and per_page < 1:
-        msg = f"per_page must be >= 1, got {per_page}"
+    if c_pagination and c_per_page < 1:
+        msg = f"per_page must be >= 1, got {c_per_page}"
         raise ValueError(msg)
 
     resolved_columns, records, index_values = _normalize_table_data(
@@ -190,18 +218,18 @@ def DataTable(
     full_count = len(records)
     total_count = total_rows if total_rows is not None else full_count
 
-    if pagination and endpoint is None and base_url is None:
-        total_pages = math.ceil(total_count / per_page) if total_count else 1
-        start = (page - 1) * per_page
-        records = records[start : start + per_page]
-    elif pagination:
-        total_pages = math.ceil(total_count / per_page) if total_count else 1
+    if c_pagination and endpoint is None and base_url is None:
+        total_pages = math.ceil(total_count / c_per_page) if total_count else 1
+        start = (page - 1) * c_per_page
+        records = records[start : start + c_per_page]
+    elif c_pagination:
+        total_pages = math.ceil(total_count / c_per_page) if total_count else 1
     else:
         total_pages = 1
 
-    if isinstance(sortable, list):
-        sortable_columns = [col for col in sortable if col in resolved_columns]
-    elif sortable:
+    if isinstance(c_sortable, list):
+        sortable_columns = [col for col in c_sortable if col in resolved_columns]
+    elif c_sortable:
         sortable_columns = list(resolved_columns)
     else:
         sortable_columns = []
@@ -221,8 +249,8 @@ def DataTable(
                 row_count=full_count,
                 include_index=include_index,
                 sortable=bool(sortable_columns),
-                searchable=searchable,
-                pagination=pagination,
+                searchable=c_searchable,
+                pagination=c_pagination,
             )
         )
 
@@ -234,27 +262,27 @@ def DataTable(
     base_params: dict[str, Any] = {}
     if filters:
         base_params.update(filters)
-    if pagination:
-        base_params["per_page"] = per_page
+    if c_pagination:
+        base_params["per_page"] = c_per_page
     if search:
         base_params[search_param] = search
     if sort:
         base_params["sort"] = sort
-        base_params["direction"] = direction
+        base_params["direction"] = c_direction
 
     head_cells: list[Any] = []
     for col in visible_columns:
         header_label = (header_map or {}).get(col, col)
         if col in sortable_columns and link_base:
             current = sort == col
-            next_dir: SortableDirection = "desc" if current and direction == "asc" else "asc"
+            next_dir: SortableDirection = "desc" if current and c_direction == "asc" else "asc"
             params = {**base_params, "sort": col, "direction": next_dir, "page": page}
             url = _build_url(link_base, params)
             link = A(
                 header_label,
                 (
                     Span(
-                        "asc" if current and direction == "asc" else "desc",
+                        "asc" if current and c_direction == "asc" else "desc",
                         cls="ms-1 text-muted small",
                     )
                     if current
@@ -269,7 +297,7 @@ def DataTable(
                     push_url=push_url,
                 ),
             )
-            aria_sort = "ascending" if current and direction == "asc" else "descending"
+            aria_sort = "ascending" if current and c_direction == "asc" else "descending"
             head_cells.append(TCell(link, header=True, scope="col", aria_sort=aria_sort))
         else:
             head_cells.append(TCell(header_label, header=True, scope="col"))
@@ -280,7 +308,7 @@ def DataTable(
         tbody = TBody(
             TRow(
                 TCell(
-                    empty_text,
+                    c_empty_text,
                     colspan=max(1, len(visible_columns)),
                     cls="text-center text-muted",
                 )
@@ -295,7 +323,7 @@ def DataTable(
 
             for col in resolved_columns:
                 value = row.get(col)
-                rendered = none_as if value is None else str(value)
+                rendered = c_none_as if value is None else str(value)
                 row_cells.append(TCell(rendered))
 
             body_rows.append(TRow(*row_cells))
@@ -308,16 +336,16 @@ def DataTable(
     table = Table(
         thead,
         tbody,
-        striped=striped,
-        hover=hover,
-        bordered=bordered,
-        responsive=responsive,
+        striped=c_striped,
+        hover=c_hover,
+        bordered=c_bordered,
+        responsive=c_responsive,
         **table_kwargs,
     )
 
     parts: list[Any] = []
 
-    if searchable:
+    if c_searchable:
         input_attrs: dict[str, Any] = {
             "type": "search",
             "name": search_param,
@@ -346,7 +374,7 @@ def DataTable(
 
     parts.append(table)
 
-    if pagination and total_pages > 1:
+    if c_pagination and total_pages > 1:
         pager_links: list[Any] = []
         for page_num in range(1, total_pages + 1):
             active = page_num == page

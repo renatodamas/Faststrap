@@ -9,6 +9,7 @@ from fasthtml.common import H3, Div, P, Span
 
 from ...core._stability import beta
 from ...core.registry import register
+from ...core.theme import resolve_defaults
 from ...core.types import VariantType
 from .card import Card
 
@@ -123,10 +124,22 @@ def MetricCard(
     **kwargs: Any,
 ) -> Div:
     """Metric card with value and delta indicator."""
-    delta_el = _trend_badge(delta, delta_type=delta_type)
+    cfg = resolve_defaults(
+        "MetricCard",
+        delta_type=delta_type,
+        variant=variant,
+        inverse=inverse,
+        icon_bg=icon_bg,
+    )
+    c_delta_type = cfg.get("delta_type", delta_type)
+    c_variant = cfg.get("variant", variant)
+    c_inverse = cfg.get("inverse", inverse)
+    c_icon_bg = cfg.get("icon_bg", icon_bg)
+
+    delta_el = _trend_badge(delta, delta_type=c_delta_type)
     value_el = H3(value, cls="mb-0 fw-bold")
     title_cls = "text-muted small text-uppercase fw-semibold"
-    if inverse:
+    if c_inverse:
         title_cls = "text-white-50 small text-uppercase fw-semibold"
 
     title_el = P(title, cls=title_cls)
@@ -134,8 +147,8 @@ def MetricCard(
     icon_el = None
     if icon:
         icon_wrapper_cls = "d-flex align-items-center justify-content-center rounded p-3"
-        if icon_bg:
-            icon_wrapper_cls = f"{icon_wrapper_cls} {icon_bg}"
+        if c_icon_bg:
+            icon_wrapper_cls = f"{icon_wrapper_cls} {c_icon_bg}"
         else:
             icon_wrapper_cls = f"{icon_wrapper_cls} bg-body-tertiary"
         icon_el = Div(icon, cls=icon_wrapper_cls)
@@ -149,7 +162,7 @@ def MetricCard(
     else:
         body_content = Div(title_el, value_el, delta_el)
 
-    return Card(body_content, variant=variant, inverse=inverse, **kwargs)
+    return Card(body_content, variant=c_variant, inverse=c_inverse, **kwargs)
 
 
 @register(category="display")
@@ -166,10 +179,20 @@ def TrendCard(
     **kwargs: Any,
 ) -> Div:
     """Metric card with a sparkline slot for trends."""
-    delta_el = _trend_badge(delta, delta_type=delta_type)
+    cfg = resolve_defaults(
+        "TrendCard",
+        delta_type=delta_type,
+        variant=variant,
+        inverse=inverse,
+    )
+    c_delta_type = cfg.get("delta_type", delta_type)
+    c_variant = cfg.get("variant", variant)
+    c_inverse = cfg.get("inverse", inverse)
+
+    delta_el = _trend_badge(delta, delta_type=c_delta_type)
     value_el = H3(value, cls="mb-0 fw-bold")
     title_cls = "text-muted small text-uppercase fw-semibold"
-    if inverse:
+    if c_inverse:
         title_cls = "text-white-50 small text-uppercase fw-semibold"
 
     title_el = P(title, cls=title_cls)
@@ -192,7 +215,7 @@ def TrendCard(
         cls="d-flex align-items-center justify-content-between gap-3",
     )
 
-    return Card(body_content, variant=variant, inverse=inverse, **kwargs)
+    return Card(body_content, variant=c_variant, inverse=c_inverse, **kwargs)
 
 
 @register(category="display")
@@ -206,18 +229,28 @@ def KPICard(
     **kwargs: Any,
 ) -> Div:
     """Card that displays multiple KPIs in a compact grid."""
-    if columns < 1:
-        msg = f"columns must be >= 1, got {columns}"
+    cfg = resolve_defaults(
+        "KPICard",
+        columns=columns,
+        variant=variant,
+        inverse=inverse,
+    )
+    c_columns = cfg.get("columns", columns)
+    c_variant = cfg.get("variant", variant)
+    c_inverse = cfg.get("inverse", inverse)
+
+    if c_columns < 1:
+        msg = f"columns must be >= 1, got {c_columns}"
         raise ValueError(msg)
 
     title_cls = "text-muted small text-uppercase fw-semibold"
-    if inverse:
+    if c_inverse:
         title_cls = "text-white-50 small text-uppercase fw-semibold"
 
     title_el = P(title, cls=title_cls)
 
     metric_cells: list[Any] = []
-    col_class = f"col-{12 // min(columns, 12)}"
+    col_class = f"col-{12 // min(c_columns, 12)}"
     for metric in metrics:
         if len(metric) < 2:
             msg = "Each metric must include at least (label, value)."
@@ -245,4 +278,4 @@ def KPICard(
         Div(*metric_cells, cls="row g-3"),
     )
 
-    return Card(body_content, variant=variant, inverse=inverse, **kwargs)
+    return Card(body_content, variant=c_variant, inverse=c_inverse, **kwargs)

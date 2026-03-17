@@ -11,6 +11,7 @@ from fasthtml.common import Form as FTForm
 from ...core._stability import beta
 from ...core.base import merge_classes
 from ...core.registry import register
+from ...core.theme import resolve_defaults
 from ...utils.attrs import convert_attrs
 from .button import Button
 from .input import Input
@@ -54,8 +55,22 @@ def DateRangePicker(
     **kwargs: Any,
 ) -> Div:
     """Date range picker with optional preset shortcuts."""
-    if method not in {"get", "post"}:
-        msg = f"method must be 'get' or 'post', got {method}"
+    cfg = resolve_defaults(
+        "DateRangePicker",
+        method=method,
+        auto=auto,
+        apply_label=apply_label,
+        hx_swap=hx_swap,
+        push_url=push_url,
+    )
+    c_method = cfg.get("method", method)
+    c_auto = cfg.get("auto", auto)
+    c_apply_label = cfg.get("apply_label", apply_label)
+    c_hx_swap = cfg.get("hx_swap", hx_swap)
+    c_push_url = cfg.get("push_url", push_url)
+
+    if c_method not in {"get", "post"}:
+        msg = f"method must be 'get' or 'post', got {c_method}"
         raise ValueError(msg)
 
     start_input = Input(
@@ -82,27 +97,27 @@ def DateRangePicker(
     )
 
     form_attrs: dict[str, Any] = {
-        "method": method,
+        "method": c_method,
         "cls": merge_classes("faststrap-date-range", form_cls),
     }
     if endpoint:
         form_attrs["action"] = endpoint
-        if method == "get":
+        if c_method == "get":
             form_attrs["hx_get"] = endpoint
         else:
             form_attrs["hx_post"] = endpoint
         if hx_target:
             form_attrs["hx_target"] = hx_target
-        if hx_swap:
-            form_attrs["hx_swap"] = hx_swap
-        if push_url:
+        if c_hx_swap:
+            form_attrs["hx_swap"] = c_hx_swap
+        if c_push_url:
             form_attrs["hx_push_url"] = "true"
-        if auto:
+        if c_auto:
             form_attrs["hx_trigger"] = "change delay:300ms"
 
     controls: list[Any] = [inputs]
-    if apply_label:
-        controls.append(Button(apply_label, type="submit", variant="primary"))
+    if c_apply_label:
+        controls.append(Button(c_apply_label, type="submit", variant="primary"))
 
     form_attrs.update(convert_attrs(kwargs))
     form = FTForm(*controls, **form_attrs)
