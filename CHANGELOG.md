@@ -5,6 +5,45 @@ All notable changes to Faststrap will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.0] - 2026-03-17
+
+### Added
+
+- Data foundations:
+  - `DataTable` with sorting, search, pagination, and export query helper
+  - `Chart` wrapper for Matplotlib, Plotly, Altair, and raw SVG/HTML
+  - Metric cards: `MetricCard`, `TrendCard`, `KPICard`
+  - `DashboardGrid` responsive dashboard layout
+- Filter inputs:
+  - `FilterBar`, `DateRangePicker`, `MultiSelect`, `RangeSlider`, `ExportButton`
+- Realtime:
+  - `SSEStream` preset and `SSETarget` component
+- Notification UI:
+  - `NotificationCenter` dropdown hub
+- Renderers:
+  - `Svg` (sanitized SVG renderer)
+  - `Mermaid` (Mermaid diagram renderer with auto-init)
+- `FormErrorSummary` helper for aggregated form errors.
+
+### Changed
+
+- Docs coverage expanded across new v0.6.0 components, with previews and security notes.
+- README and ROADMAP updated to reflect v0.6.0 delivery and counts.
+- Mermaid diagrams auto-initialize on page load and after HTMX swaps when Mermaid.js is present.
+
+### Fixed
+
+- Mojibake/encoding artifacts in docs and presets header text.
+
+### Quality
+
+- Added tests for `Svg` and `Mermaid`.
+- Full gate pass:
+  - `black src/faststrap tests`
+  - `ruff check src/faststrap tests`
+  - `mypy src/faststrap`
+  - `pytest -q` (683 passed)
+
 ## [0.5.9] - 2026-03-07
 
 ### Added
