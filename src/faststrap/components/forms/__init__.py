@@ -3,6 +3,7 @@
 from .button import Button, CloseButton
 from .buttongroup import ButtonGroup, ButtonToolbar
 from .checks import Checkbox, Radio, Range, Switch
+from .date_range_picker import DateRangePicker
 from .errors import FormGroupFromErrors, extract_field_error, map_formgroup_validation
 from .file import FileInput
 from .filter_bar import FilterBar
@@ -10,6 +11,8 @@ from .form import Form
 from .formgroup import FormGroup
 from .input import Input
 from .inputgroup import FloatingLabel, InputGroup, InputGroupText
+from .multi_select import MultiSelect
+from .range_slider import RangeSlider
 from .searchable_select import SearchableSelect
 from .select import Select
 from .theme_toggle import ThemeToggle
@@ -29,6 +32,7 @@ __all__ = [
     "Form",
     "FormGroup",
     "FilterBar",
+    "DateRangePicker",
     "extract_field_error",
     "map_formgroup_validation",
     "FormGroupFromErrors",
@@ -36,6 +40,8 @@ __all__ = [
     "InputGroup",
     "InputGroupText",
     "FloatingLabel",
+    "MultiSelect",
+    "RangeSlider",
     "SearchableSelect",
     "Select",
     "ThemeToggle",

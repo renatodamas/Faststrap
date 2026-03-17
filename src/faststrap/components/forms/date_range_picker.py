@@ -1,0 +1,144 @@
+"""DateRangePicker component for selecting start/end dates."""
+
+from __future__ import annotations
+
+from typing import Any
+from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
+
+from fasthtml.common import Div
+from fasthtml.common import Form as FTForm
+
+from ...core._stability import beta
+from ...core.base import merge_classes
+from ...core.registry import register
+from ...utils.attrs import convert_attrs
+from .button import Button
+from .input import Input
+
+
+def _build_url(base_url: str, params: dict[str, Any]) -> str:
+    parts = urlsplit(base_url)
+    existing = dict(parse_qsl(parts.query, keep_blank_values=True))
+    merged: dict[str, Any] = {**existing}
+    for key, value in params.items():
+        if value is None:
+            continue
+        merged[str(key)] = str(value)
+    query = urlencode(merged, doseq=True)
+    return urlunsplit((parts.scheme, parts.netloc, parts.path, query, parts.fragment))
+
+
+@register(category="forms")
+@beta
+def DateRangePicker(
+    *,
+    start_name: str = "start_date",
+    end_name: str = "end_date",
+    start_label: str = "Start date",
+    end_label: str = "End date",
+    start_value: str | None = None,
+    end_value: str | None = None,
+    min_date: str | None = None,
+    max_date: str | None = None,
+    presets: list[tuple[str, str, str]] | None = None,
+    endpoint: str | None = None,
+    method: str = "get",
+    auto: bool = False,
+    apply_label: str | None = "Apply",
+    hx_target: str | None = None,
+    hx_swap: str | None = "outerHTML",
+    push_url: bool = False,
+    form_cls: str | None = None,
+    presets_cls: str | None = None,
+    inputs_cls: str | None = None,
+    **kwargs: Any,
+) -> Div:
+    """Date range picker with optional preset shortcuts."""
+    if method not in {"get", "post"}:
+        msg = f"method must be 'get' or 'post', got {method}"
+        raise ValueError(msg)
+
+    start_input = Input(
+        start_name,
+        input_type="date",
+        label=start_label,
+        value=start_value,
+        min=min_date,
+        max=max_date,
+    )
+    end_input = Input(
+        end_name,
+        input_type="date",
+        label=end_label,
+        value=end_value,
+        min=min_date,
+        max=max_date,
+    )
+
+    inputs = Div(
+        start_input,
+        end_input,
+        cls=merge_classes("d-flex flex-wrap gap-3 align-items-end", inputs_cls),
+    )
+
+    form_attrs: dict[str, Any] = {
+        "method": method,
+        "cls": merge_classes("faststrap-date-range", form_cls),
+    }
+    if endpoint:
+        form_attrs["action"] = endpoint
+        if method == "get":
+            form_attrs["hx_get"] = endpoint
+        else:
+            form_attrs["hx_post"] = endpoint
+        if hx_target:
+            form_attrs["hx_target"] = hx_target
+        if hx_swap:
+            form_attrs["hx_swap"] = hx_swap
+        if push_url:
+            form_attrs["hx_push_url"] = "true"
+        if auto:
+            form_attrs["hx_trigger"] = "change delay:300ms"
+
+    controls: list[Any] = [inputs]
+    if apply_label:
+        controls.append(Button(apply_label, type="submit", variant="primary"))
+
+    form_attrs.update(convert_attrs(kwargs))
+    form = FTForm(*controls, **form_attrs)
+
+    preset_buttons: list[Any] = []
+    if presets:
+        for label, preset_start, preset_end in presets:
+            if endpoint:
+                url = _build_url(
+                    endpoint,
+                    {start_name: preset_start, end_name: preset_end},
+                )
+                preset_buttons.append(
+                    Button(
+                        label,
+                        variant="secondary",
+                        outline=True,
+                        href=url,
+                        hx_get=url if endpoint else None,
+                        hx_target=hx_target,
+                        hx_swap=hx_swap,
+                        hx_push_url="true" if push_url else None,
+                    )
+                )
+            else:
+                preset_buttons.append(
+                    Button(label, variant="secondary", outline=True, type="button")
+                )
+
+    presets_wrap = None
+    if preset_buttons:
+        presets_wrap = Div(
+            *preset_buttons,
+            cls=merge_classes("d-flex flex-wrap gap-2 mb-3", presets_cls),
+        )
+
+    if presets_wrap:
+        return Div(presets_wrap, form)
+    return Div(form)
