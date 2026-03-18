@@ -41,6 +41,12 @@ mount_assets(app, "assets", url_path="/assets")
 # Files: assets/hero.jpg → /assets/hero.jpg
 ```
 
+Relative asset directories are resolved against:
+
+1. `base_dir=` if you pass it
+2. the calling file when available
+3. the current working directory as a fallback
+
 ### Method 2: FastHTML's `static_dir`
 
 **Pros**: Built-in, simple  
@@ -109,6 +115,12 @@ mount_assets(app, "fonts", url_path="/fonts")
 
 ```python
 mount_assets(app, "/var/www/static", url_path="/files")
+```
+
+### Explicit Base Directory
+
+```python
+mount_assets(app, "assets", url_path="/assets", base_dir=BASE_DIR)
 ```
 
 ### Custom Priority

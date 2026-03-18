@@ -4,6 +4,14 @@ The `Table` component enables you to display tabular data efficiently. FastStrap
 
 For sorting, search, and pagination, see `DataTable`.
 
+!!! info "Naming update in v0.6.1"
+    `Table`, `THead`, `TBody`, `TRow`, and `TCell` are unchanged and remain the primary API.
+    Faststrap `v0.6.1` adds optional aliases `BsTable`, `BsTHead`, `BsTBody`, `BsTRow`,
+    and `BsTCell` for projects that mix Faststrap with FastHTML's native table elements.
+
+    - Existing code can keep using `Table` / `THead` / `TBody` / `TRow` / `TCell`
+    - New mixed-import code may prefer the `Bs*` aliases for clarity
+
 !!! tip "Bootstrap Reference"
     [Bootstrap 5 Tables](https://getbootstrap.com/docs/5.3/content/tables/)
 
@@ -116,6 +124,18 @@ Supported inputs:
 - pandas `DataFrame`
 - polars `DataFrame` (if installed)
 - `list[dict]`
+
+### Optional Aliases for Mixed Imports
+
+```python
+from faststrap import BsTable, BsTHead, BsTBody, BsTRow, BsTCell
+
+BsTable(
+    BsTHead(BsTRow(BsTCell("ID", header=True), BsTCell("Name", header=True))),
+    BsTBody(BsTRow(BsTCell("1"), BsTCell("Alice"))),
+    striped=True,
+)
+```
 
 ---
 

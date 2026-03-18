@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import importlib
+import warnings
 from enum import Enum
 from types import UnionType
 from typing import Any, Literal, get_args, get_origin
@@ -101,7 +102,7 @@ def _build_field_input(name: str, field_info: Any) -> tuple[Any, bool]:
 
 
 @beta
-class Form:
+class FormBuilder:
     """Form builder helpers."""
 
     @staticmethod
@@ -122,12 +123,15 @@ class Form:
         try:
             pydantic_module = importlib.import_module("pydantic")
         except ImportError as exc:
-            msg = "Form.from_pydantic() requires pydantic. Install with `pip install pydantic`."
+            msg = (
+                "FormBuilder.from_pydantic() requires pydantic. "
+                "Install with `pip install pydantic`."
+            )
             raise ImportError(msg) from exc
 
         base_model = pydantic_module.BaseModel
         if not isinstance(model_class, type) or not issubclass(model_class, base_model):
-            msg = "Form.from_pydantic() expects a Pydantic BaseModel class."
+            msg = "FormBuilder.from_pydantic() expects a Pydantic BaseModel class."
             raise TypeError(msg)
 
         model_fields = getattr(model_class, "model_fields", None)
@@ -172,3 +176,47 @@ class Form:
         form_attrs.update(kwargs)
 
         return FTForm(*fields, **form_attrs)
+
+
+@beta
+class Form:
+    """Compatibility alias for :class:`FormBuilder`.
+
+    `Form.from_pydantic()` is retained for backward compatibility with Faststrap
+    v0.6.0 and earlier. New code should prefer `FormBuilder.from_pydantic()`
+    to avoid confusion with FastHTML's native `Form` element.
+    """
+
+    @staticmethod
+    def from_pydantic(
+        model_class: type[Any],
+        *,
+        action: str | None = None,
+        method: str = "post",
+        include: list[str] | None = None,
+        exclude: list[str] | None = None,
+        submit_label: str = "Submit",
+        submit_variant: str = "primary",
+        form_cls: str = "",
+        button_cls: str = "",
+        **kwargs: Any,
+    ) -> FTForm:
+        warnings.warn(
+            "Form.from_pydantic() is deprecated as of Faststrap v0.6.1; "
+            "use FormBuilder.from_pydantic() instead. "
+            "The Form alias remains supported for backward compatibility.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        return FormBuilder.from_pydantic(
+            model_class,
+            action=action,
+            method=method,
+            include=include,
+            exclude=exclude,
+            submit_label=submit_label,
+            submit_variant=submit_variant,
+            form_cls=form_cls,
+            button_cls=button_cls,
+            **kwargs,
+        )

@@ -165,6 +165,7 @@ _BUILTIN_THEMES: dict[str, dict[str, str]] = {
         "--bs-success-rgb": "40, 167, 69",
     },
 }
+_BUILTIN_THEME_CACHE: dict[str, "Theme"] = {}
 
 # ============================================================================
 # Light/Dark Mode CSS Variable Definitions
@@ -275,26 +276,31 @@ class Theme:
         light_vars = self._get_mode_vars("light")
         dark_vars = self._get_mode_vars("dark")
 
-        light_css = "; ".join(f"{k}: {v}" for k, v in light_vars.items())
-        dark_css = "; ".join(f"{k}: {v}" for k, v in dark_vars.items())
+        light_css = _format_css_vars(light_vars)
+        dark_css = _format_css_vars(dark_vars)
 
-        # Determine initial variables for :root
         if mode == "auto":
-            initial_css = f"""
-            {light_css};
-            @media (prefers-color-scheme: dark) {{
-                {dark_css};
-            }}
-            """
+            root_css = (
+                f":root {{\n{light_css}\n}}\n"
+                f"@media (prefers-color-scheme: dark) {{\n"
+                f"  :root {{\n{dark_css}\n  }}\n"
+                f"}}"
+            )
+        elif mode == "light":
+            root_css = f":root {{\n{light_css}\n}}"
         else:
-            initial_css = light_css if mode == "light" else dark_css
+            root_css = f":root {{\n{dark_css}\n}}"
 
         # Build comprehensive CSS with overrides for specific components
         # that don't always inherit correctly from :root variables.
         css_content = f"""
-:root {{ {initial_css} }}
-[data-bs-theme="light"] {{ {light_css} }}
-[data-bs-theme="dark"] {{ {dark_css} }}
+{root_css}
+[data-bs-theme="light"] {{
+{light_css}
+}}
+[data-bs-theme="dark"] {{
+{dark_css}
+}}
 
 /* Component overrides for custom theme colors */
 .btn-primary {{
@@ -449,7 +455,12 @@ def get_builtin_theme(name: str) -> Theme:
     if name not in _BUILTIN_THEMES:
         available = ", ".join(sorted(_BUILTIN_THEMES.keys()))
         raise ValueError(f"Unknown theme: '{name}'. Available themes: {available}")
-    return Theme(_BUILTIN_THEMES[name])
+    cached = _BUILTIN_THEME_CACHE.get(name)
+    if cached is not None:
+        return cached
+    theme = Theme(_BUILTIN_THEMES[name])
+    _BUILTIN_THEME_CACHE[name] = theme
+    return theme
 
 
 def list_builtin_themes() -> list[str]:
@@ -459,6 +470,11 @@ def list_builtin_themes() -> list[str]:
         List of theme names
     """
     return list(_BUILTIN_THEMES.keys())
+
+
+def _format_css_vars(variables: dict[str, str], *, indent: str = "  ") -> str:
+    """Format CSS custom properties one declaration per line."""
+    return "\n".join(f"{indent}{key}: {value};" for key, value in variables.items())
 
 
 # ============================================================================

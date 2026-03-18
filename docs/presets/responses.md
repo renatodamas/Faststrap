@@ -24,7 +24,11 @@ def login(email: str, password: str):
 | Parameter | Type | Default | Description |
 | --- | --- | --- | --- |
 | `url` | `str` | **required** | URL to redirect to |
-| `status_code` | `int` | `200` | HTTP status code |
+| `status_code` | `int` | `204` | HTTP success status code |
+
+!!! note
+    `HX-Redirect` should be returned with a `2xx` status code.
+    A browser redirect like `303` bypasses HTMX header handling.
 
 ---
 
@@ -61,6 +65,10 @@ return hx_trigger({
     "showNotification": {"message": "Saved!"}
 })
 ```
+
+!!! note
+    Event names should use HTMX-safe characters such as letters, numbers,
+    `_`, `:`, `.`, and `-`.
 
 ---
 

@@ -35,6 +35,13 @@ def test_builtin_themes():
         get_builtin_theme("nonexistent")
 
 
+def test_builtin_themes_are_cached():
+    t1 = get_builtin_theme("green-nature")
+    t2 = get_builtin_theme("green-nature")
+
+    assert t1 is t2
+
+
 def test_theme_css_generation():
     """Test Theme.to_style() output for different modes."""
     theme = get_builtin_theme("blue-ocean")
@@ -52,6 +59,8 @@ def test_theme_css_generation():
     auto_css = theme.to_style(mode="auto")
     assert '[data-bs-theme="dark"]' in auto_css
     assert "@media (prefers-color-scheme: dark)" in auto_css
+    assert ":root {" in auto_css
+    assert "@media (prefers-color-scheme: dark) {\n  :root {" in auto_css
 
 
 def test_resolve_defaults_mechanics():

@@ -87,7 +87,7 @@ def Input(
 
     if placeholder:
         attrs["placeholder"] = placeholder
-    if value:
+    if value is not None:
         attrs["value"] = value
     if c_disabled:
         attrs["disabled"] = True

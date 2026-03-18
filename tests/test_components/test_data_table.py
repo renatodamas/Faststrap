@@ -1,5 +1,7 @@
 """Tests for DataTable component."""
 
+from concurrent.futures import ThreadPoolExecutor
+
 from fasthtml.common import to_xml
 
 from faststrap import DataTable
@@ -114,3 +116,16 @@ def test_data_table_export_params_helper():
     assert "empty" not in params
     assert params["page"] == 2
     assert params["per_page"] == 50
+
+
+def test_data_table_auto_ids_are_unique_across_threads():
+    data = [{"name": "Alice"}]
+
+    def render_table(_: int) -> str:
+        return to_xml(DataTable(data, searchable=True, pagination=True))
+
+    with ThreadPoolExecutor(max_workers=8) as executor:
+        rendered = list(executor.map(render_table, range(80)))
+
+    ids = [html.split('id="', 1)[1].split('"', 1)[0] for html in rendered]
+    assert len(ids) == len(set(ids))

@@ -175,3 +175,17 @@ def test_mount_assets_multiple_directories(tmp_path):
     assert "/assets" in mount_paths
     assert "/img" in mount_paths
     assert "/uploads" in mount_paths
+
+
+def test_mount_assets_resolves_relative_directory_from_explicit_base_dir(tmp_path):
+    assets_dir = tmp_path / "frontend" / "assets"
+    assets_dir.mkdir(parents=True)
+
+    app = FastHTML()
+    mount_assets(app, "assets", url_path="/assets", base_dir=tmp_path / "frontend")
+
+    mount_route = next(
+        (route for route in app.routes if isinstance(route, Mount) and route.path == "/assets"),
+        None,
+    )
+    assert mount_route is not None

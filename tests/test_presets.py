@@ -135,7 +135,15 @@ def test_hx_redirect():
     response = hx_redirect("/dashboard")
 
     assert isinstance(response, Response)
+    assert response.status_code == 204
     assert response.headers.get("HX-Redirect") == "/dashboard"
+
+
+def test_hx_redirect_supports_custom_success_status():
+    response = hx_redirect("/dashboard", status_code=200)
+
+    assert isinstance(response, Response)
+    assert response.status_code == 200
 
 
 def test_hx_refresh():
@@ -161,6 +169,14 @@ def test_hx_trigger_with_detail():
     assert isinstance(response, Response)
     trigger_header = response.headers.get("HX-Trigger", "")
     assert "showToast" in trigger_header
+
+
+def test_hx_trigger_rejects_invalid_event_names():
+    try:
+        hx_trigger("foo\r\nX-Injected: bad")
+        raise AssertionError("Expected ValueError for invalid HTMX event name")
+    except ValueError as exc:
+        assert "Invalid HTMX event name" in str(exc)
 
 
 # Auth Decorator Tests

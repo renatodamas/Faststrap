@@ -15,7 +15,7 @@ from .sheet import Sheet
 from .sse_target import SSETarget
 from .stat_card import KPICard, MetricCard, StatCard, TrendCard
 from .svg import Svg, render_svg
-from .table import Table, TBody, TCell, THead, TRow
+from .table import BsTable, BsTBody, BsTCell, BsTHead, BsTRow, Table, TBody, TCell, THead, TRow
 from .text_clamp import TextClamp
 
 __all__ = [
@@ -42,6 +42,11 @@ __all__ = [
     "KPICard",
     "StatCard",
     "TextClamp",
+    "BsTable",
+    "BsTHead",
+    "BsTBody",
+    "BsTRow",
+    "BsTCell",
     "Table",
     "THead",
     "TBody",

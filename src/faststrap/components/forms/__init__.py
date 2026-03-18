@@ -13,7 +13,7 @@ from .errors import (
 from .export_button import ExportButton
 from .file import FileInput
 from .filter_bar import FilterBar
-from .form import Form
+from .form import Form, FormBuilder
 from .formgroup import FormGroup
 from .input import Input
 from .inputgroup import FloatingLabel, InputGroup, InputGroupText
@@ -36,6 +36,7 @@ __all__ = [
     "ToggleGroup",
     "FileInput",
     "Form",
+    "FormBuilder",
     "FormGroup",
     "FilterBar",
     "DateRangePicker",

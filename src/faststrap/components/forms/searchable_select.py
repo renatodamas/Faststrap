@@ -5,6 +5,7 @@ Server-side searchable dropdown using HTMX.
 
 import hashlib
 import json
+import warnings
 from typing import Any
 
 from fasthtml.common import A, Div, Input, Option, Select
@@ -14,6 +15,9 @@ from ...core.registry import register
 from ...core.theme import resolve_defaults
 from ...core.types import SizeType
 from ...utils.attrs import convert_attrs
+
+
+_SEARCHABLE_SELECT_DEFAULT_WARNED = False
 
 
 def _stable_searchable_select_id(
@@ -50,7 +54,7 @@ def SearchableSelect(
     required: bool = False,
     size: SizeType | None = None,
     select_id: str | None = None,
-    csp_safe: bool = False,
+    csp_safe: bool | None = None,
     **kwargs: Any,
 ) -> Div:
     """Server-side searchable dropdown using HTMX.
@@ -68,7 +72,8 @@ def SearchableSelect(
         min_chars: Minimum characters before triggering search
         select_id: Unique ID for the select element
         csp_safe: Avoid inline click handlers by using delegated listeners
-            from FastStrap init script.
+            from FastStrap init script. `None` preserves the legacy default
+            for backward compatibility and emits a deprecation warning.
         **kwargs: Additional HTML attributes
 
     Returns:
@@ -127,6 +132,19 @@ def SearchableSelect(
     """
     if initial_options is None:
         initial_options = []
+
+    global _SEARCHABLE_SELECT_DEFAULT_WARNED
+    if csp_safe is None:
+        if not _SEARCHABLE_SELECT_DEFAULT_WARNED:
+            warnings.warn(
+                "SearchableSelect() defaults to inline click handlers today for backward "
+                "compatibility. Pass csp_safe=True to avoid inline JavaScript. The default "
+                "will change to csp_safe=True in a future release.",
+                DeprecationWarning,
+                stacklevel=2,
+            )
+            _SEARCHABLE_SELECT_DEFAULT_WARNED = True
+        csp_safe = False
 
     # Resolve API defaults
     cfg = resolve_defaults("SearchableSelect", size=size)

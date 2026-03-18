@@ -1,4 +1,4 @@
-"""Tests for Form.from_pydantic builder."""
+"""Tests for FormBuilder.from_pydantic builder."""
 
 from __future__ import annotations
 
@@ -11,7 +11,7 @@ from fasthtml.common import to_xml
 pytest.importorskip("pydantic")
 from pydantic import BaseModel, EmailStr
 
-from faststrap.components.forms.form import Form
+from faststrap.components.forms.form import Form, FormBuilder
 
 
 class Role(str, Enum):
@@ -29,7 +29,7 @@ class SignupModel(BaseModel):
 
 
 def test_form_from_pydantic_generates_expected_fields() -> None:
-    form = Form.from_pydantic(SignupModel, action="/signup")
+    form = FormBuilder.from_pydantic(SignupModel, action="/signup")
     html = to_xml(form)
 
     assert 'action="/signup"' in html
@@ -47,7 +47,7 @@ def test_form_from_pydantic_generates_expected_fields() -> None:
 
 
 def test_form_from_pydantic_supports_include_exclude() -> None:
-    form = Form.from_pydantic(SignupModel, include=["email", "age"], exclude=["age"])
+    form = FormBuilder.from_pydantic(SignupModel, include=["email", "age"], exclude=["age"])
     html = to_xml(form)
 
     assert 'name="email"' in html
@@ -57,7 +57,7 @@ def test_form_from_pydantic_supports_include_exclude() -> None:
 
 def test_form_from_pydantic_rejects_non_model() -> None:
     try:
-        Form.from_pydantic(dict)  # type: ignore[arg-type]
+        FormBuilder.from_pydantic(dict)  # type: ignore[arg-type]
         raise AssertionError("Expected TypeError for non-Pydantic model")
     except TypeError as exc:
         assert "BaseModel class" in str(exc)
@@ -73,6 +73,14 @@ def test_form_from_pydantic_uses_field_description_as_help_text() -> None:
 
     # Patch description on field metadata for deterministic check
     ModelWithDescription.model_fields["bio"].description = "Tell us about yourself"
-    form = Form.from_pydantic(ModelWithDescription)
+    form = FormBuilder.from_pydantic(ModelWithDescription)
     html = to_xml(form)
     assert "Tell us about yourself" in html
+
+
+def test_form_alias_warns_and_delegates() -> None:
+    with pytest.warns(DeprecationWarning, match="FormBuilder.from_pydantic"):
+        form = Form.from_pydantic(SignupModel, action="/signup")
+
+    html = to_xml(form)
+    assert 'action="/signup"' in html

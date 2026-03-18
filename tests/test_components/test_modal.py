@@ -1,5 +1,7 @@
 """Tests for Modal component."""
 
+from concurrent.futures import ThreadPoolExecutor
+
 from fasthtml.common import to_xml
 
 from faststrap import Button
@@ -187,3 +189,14 @@ def test_modal_focus_trap_attributes():
     html = to_xml(modal)
     assert 'data-fs-focus-trap="true"' in html
     assert 'data-fs-autofocus="#first-field"' in html
+
+
+def test_modal_auto_ids_are_unique_across_threads():
+    def render_modal(_: int) -> str:
+        return to_xml(Modal("Content", title="Concurrent modal"))
+
+    with ThreadPoolExecutor(max_workers=8) as executor:
+        rendered = list(executor.map(render_modal, range(80)))
+
+    ids = [html.split('id="', 1)[1].split('"', 1)[0] for html in rendered]
+    assert len(ids) == len(set(ids))

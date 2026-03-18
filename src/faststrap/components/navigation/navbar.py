@@ -2,21 +2,17 @@
 
 from __future__ import annotations
 
-import itertools
 from typing import Any
 
 from fasthtml.common import A, Button, Div, Nav, Span
 
 from ...core._stability import stable
+from ...core._ids import next_sequential_id
 from ...core.base import merge_classes
 from ...core.registry import register
 from ...core.theme import resolve_defaults
 from ...core.types import ExpandType
 from ...utils.attrs import convert_attrs
-
-# Deterministic ID counter for navbar togglers
-_navbar_id_counter = itertools.count(1)
-
 
 def _get_next_navbar_id() -> str:
     """Generate deterministic navbar ID for collapse toggler.
@@ -24,7 +20,7 @@ def _get_next_navbar_id() -> str:
     Returns:
         Unique navbar ID string (e.g., 'navbar1', 'navbar2', etc.)
     """
-    return f"navbar{next(_navbar_id_counter)}"
+    return next_sequential_id("navbar")
 
 
 @stable
@@ -116,7 +112,10 @@ def Navbar(
     all_classes = merge_classes(" ".join(classes), user_cls)
 
     # Build attributes
+    root_id = kwargs.pop("id", None)
     attrs: dict[str, Any] = {"cls": all_classes}
+    if root_id:
+        attrs["id"] = root_id
     attrs.update(convert_attrs(kwargs))
 
     # Build navbar content
@@ -141,9 +140,7 @@ def Navbar(
 
         # Toggler for mobile (collapse button)
         if c_expand:
-            toggler_id = kwargs.get("id")
-            if not toggler_id:
-                toggler_id = _get_next_navbar_id()
+            toggler_id = f"{root_id}-collapse" if root_id else _get_next_navbar_id()
 
             toggler = Button(
                 Span(cls="navbar-toggler-icon"),
@@ -172,9 +169,7 @@ def Navbar(
 
         if c_expand:
             # Still need collapse for mobile
-            toggler_id = kwargs.get("id")
-            if not toggler_id:
-                toggler_id = _get_next_navbar_id()
+            toggler_id = f"{root_id}-collapse" if root_id else _get_next_navbar_id()
 
             toggler = Button(
                 Span(cls="navbar-toggler-icon"),

@@ -11,6 +11,7 @@ from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 from fasthtml.common import A, Div, Form, Input, Li, Nav, Span, Ul
 
 from ...core._stability import beta
+from ...core._ids import uniquify_id
 from ...core.base import merge_classes
 from ...core.registry import register
 from ...core.theme import resolve_defaults
@@ -19,17 +20,6 @@ from .table import Table, TBody, TCell, THead, TRow, _normalize_table_data
 
 SortableDirection = Literal["asc", "desc"]
 ResponsiveType = Literal["sm", "md", "lg", "xl", "xxl"]
-
-_DATA_TABLE_ID_COUNTS: dict[str, int] = {}
-
-
-def _unique_table_id(base_id: str) -> str:
-    count = _DATA_TABLE_ID_COUNTS.get(base_id, 0) + 1
-    _DATA_TABLE_ID_COUNTS[base_id] = count
-    if count == 1:
-        return base_id
-    return f"{base_id}-{count}"
-
 
 def _stable_table_id(
     *,
@@ -52,7 +42,7 @@ def _stable_table_id(
             },
             sort_keys=True,
         ).encode("utf-8")
-    ).hexdigest()[:10]
+    ).hexdigest()[:16]
     return f"datatable-{digest}-auto"
 
 
@@ -337,7 +327,7 @@ def DataTable(
 
     wrapper_id = kwargs.pop("id", None) or table_id
     if wrapper_id is None:
-        wrapper_id = _unique_table_id(
+        wrapper_id = uniquify_id(
             _stable_table_id(
                 columns=visible_columns,
                 row_count=full_count,

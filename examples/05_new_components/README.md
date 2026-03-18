@@ -2,6 +2,12 @@
 
 This directory contains comprehensive examples demonstrating newly added components and presets up to Faststrap v0.5.9.
 
+## Naming Note for v0.6.1+
+
+- `Form.from_pydantic()` is now documented as `FormBuilder.from_pydantic()`
+- The old `Form` name still works as a compatibility alias for projects on older examples
+- `Table`, `THead`, `TBody`, `TRow`, and `TCell` are unchanged; optional `Bs*` aliases now exist for mixed FastHTML imports
+
 ## New in v0.6.0
 
 ### `v060_data_foundations.py` - Data Foundations Demo
@@ -55,7 +61,7 @@ Single app that demonstrates:
 - `LocationAction`
 - `Markdown` (with optional dependency fallback)
 - `MapView` (experimental)
-- `Form.from_pydantic()` (with fallback when pydantic is missing)
+- `Form.from_pydantic()` / `FormBuilder.from_pydantic()` (with fallback when pydantic is missing)
 - `Table.from_df()` for list records and pandas DataFrame
 - Advanced `add_pwa(...)` options:
   - background sync registration

@@ -18,6 +18,7 @@ VariantType = Literal[
 ]
 
 SizeType = Literal["sm", "lg"]  # specialized sizes (like 'md') are often implicit
+ModalSizeType = Literal["sm", "lg", "xl"]
 
 # Placement (for Tooltips, Popovers, Drawers, Dropdowns)
 PlacementType = Literal[

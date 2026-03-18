@@ -270,7 +270,7 @@ Components are typed, HTMX-friendly, and follow Bootstrap conventions. Stability
 - `sse_comment`
 - `@require_auth`
 
-### Forms (26 Components)
+### Forms (26 Components + compatibility alias)
 
 - `Button`
 - `ButtonGroup`
@@ -283,6 +283,7 @@ Components are typed, HTMX-friendly, and follow Bootstrap conventions. Stability
 - `FilterBar`
 - `FloatingLabel`
 - `Form`
+- `FormBuilder`
 - `FormErrorSummary`
 - `FormGroup`
 - `FormGroupFromErrors`
@@ -299,7 +300,7 @@ Components are typed, HTMX-friendly, and follow Bootstrap conventions. Stability
 - `ThemeToggle`
 - `ToggleGroup`
 
-### Display (25 Components)
+### Display (25 Components + optional aliases)
 
 - `Badge`
 - `Card`
@@ -319,6 +320,7 @@ Components are typed, HTMX-friendly, and follow Bootstrap conventions. Stability
 - `SSETarget`
 - `StatCard`
 - `Svg`
+- `BsTable` / `BsTHead` / `BsTBody` / `BsTRow` / `BsTCell`
 - `Table`
 - `THead`
 - `TBody`
@@ -326,6 +328,11 @@ Components are typed, HTMX-friendly, and follow Bootstrap conventions. Stability
 - `TCell`
 - `TextClamp`
 - `TrendCard`
+
+### v0.6.1 Naming Notes
+
+- `FormBuilder` is now the preferred name for the Pydantic form builder API. If you are on `v0.6.0` or earlier, keep using `Form.from_pydantic()`. In `v0.6.1+`, prefer `FormBuilder.from_pydantic()`. `Form` remains as a compatibility alias.
+- `Table`, `THead`, `TBody`, `TRow`, and `TCell` remain the primary table API. `v0.6.1` adds optional aliases `BsTable`, `BsTHead`, `BsTBody`, `BsTRow`, and `BsTCell` for projects that import both FastHTML and Faststrap table primitives.
 
 ### Feedback (24 Components)
 

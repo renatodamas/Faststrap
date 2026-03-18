@@ -8,29 +8,19 @@ from typing import Any, Literal
 
 from fasthtml.common import H5, Div
 
+from ...core._ids import uniquify_id
 from ...core.base import merge_classes
 from ...core.registry import register
 from ...core.theme import resolve_defaults
-from ...core.types import SizeType
+from ...core.types import ModalSizeType
 from ...utils.attrs import convert_attrs
 from ..forms.button import CloseButton
-
-_MODAL_ID_COUNTS: dict[str, int] = {}
-
-
-def _unique_modal_id(base_id: str) -> str:
-    count = _MODAL_ID_COUNTS.get(base_id, 0) + 1
-    _MODAL_ID_COUNTS[base_id] = count
-    if count == 1:
-        return base_id
-    return f"{base_id}-{count}"
-
 
 def _stable_modal_id(
     children: tuple[Any, ...],
     *,
     title: str | None,
-    size: SizeType | None,
+    size: ModalSizeType | None,
     centered: bool,
     scrollable: bool,
     fullscreen: bool | str,
@@ -47,7 +37,7 @@ def _stable_modal_id(
             },
             sort_keys=True,
         ).encode("utf-8")
-    ).hexdigest()[:10]
+    ).hexdigest()[:16]
     return f"modal-{digest}-auto"
 
 
@@ -57,7 +47,7 @@ def Modal(
     modal_id: str | None = None,
     title: str | None = None,
     footer: Any | None = None,
-    size: SizeType | None = None,
+    size: ModalSizeType | None = None,
     centered: bool | None = None,
     scrollable: bool | None = None,
     fullscreen: (
@@ -139,7 +129,7 @@ def Modal(
             scrollable=c_scrollable,
             fullscreen=c_fullscreen,
         )
-        modal_id = _unique_modal_id(base_id)
+        modal_id = uniquify_id(base_id)
 
     # Build modal dialog classes
     dialog_classes = ["modal-dialog"]

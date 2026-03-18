@@ -210,6 +210,9 @@ def login(email: str, password: str):
         return ErrorDialog(message="Invalid credentials")
 ```
 
+Use `2xx` status codes with `hx_redirect()`. A browser redirect such as `303`
+is handled before HTMX reads the `HX-Redirect` header.
+
 ### hx_refresh
 
 Full page refresh.
@@ -413,7 +416,7 @@ def get_posts_page(page: int = 1):
 
 | Function | Parameters | Returns | Description |
 | :--- | :--- | :--- | :--- |
-| `hx_redirect` | `url: str` | `Response` | Client-side redirect |
+| `hx_redirect` | `url: str, status_code: int = 204` | `Response` | Client-side redirect |
 | `hx_refresh` | - | `Response` | Full page refresh |
 | `hx_trigger` | `event: str \| dict` | `Response` | Trigger client event |
 | `hx_reswap` | `strategy: str` | `Response` | Change swap strategy |

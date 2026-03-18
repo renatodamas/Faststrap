@@ -5,19 +5,28 @@ These helpers eliminate boilerplate for HTMX server-side interactions.
 """
 
 import json
+import re
 from typing import Any
 
 from starlette.responses import Response
 
 from ..components.feedback.toast import Toast
 
+_HTMX_EVENT_NAME_RE = re.compile(r"^[a-zA-Z0-9_:.-]+$")
 
-def hx_redirect(url: str, status_code: int = 200) -> Response:
+
+def _validate_hx_event_name(event: str) -> str:
+    if not _HTMX_EVENT_NAME_RE.fullmatch(event):
+        raise ValueError(f"Invalid HTMX event name: {event!r}")
+    return event
+
+
+def hx_redirect(url: str, status_code: int = 204) -> Response:
     """Return a response that triggers a client-side redirect via HTMX.
 
     Args:
         url: URL to redirect to
-        status_code: HTTP status code (default: 200)
+        status_code: HTTP status code (default: 204)
 
     Returns:
         Response with HX-Redirect header
@@ -29,11 +38,13 @@ def hx_redirect(url: str, status_code: int = 200) -> Response:
         >>>     # ... authenticate user ...
         >>>     return hx_redirect("/dashboard")
 
-        Redirect with 303 See Other:
-        >>> return hx_redirect("/success", status_code=303)
+        Custom 2xx status:
+        >>> return hx_redirect("/success", status_code=200)
 
     Note:
         This triggers a full page redirect on the client side.
+        HTMX processes `HX-Redirect` on 2xx responses; 3xx browser redirects
+        bypass HTMX header handling.
         For partial page updates, use regular HTMX responses.
     """
     return Response(
@@ -108,11 +119,14 @@ def hx_trigger(
         ```
     """
     if isinstance(event, str):
+        event = _validate_hx_event_name(event)
         if detail is not None:
             trigger_value = json.dumps({event: detail})
         else:
             trigger_value = event
     else:
+        for event_name in event:
+            _validate_hx_event_name(event_name)
         trigger_value = json.dumps(event)
 
     return Response(

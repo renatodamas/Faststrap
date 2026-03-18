@@ -159,3 +159,11 @@ def test_navbar_id_generation_is_thread_safe_and_unique():
     with ThreadPoolExecutor(max_workers=8) as executor:
         ids = list(executor.map(lambda _: _get_next_navbar_id(), range(200)))
     assert len(ids) == len(set(ids))
+
+
+def test_navbar_custom_root_id_keeps_unique_collapse_id():
+    html = to_xml(Navbar(A("Home", href="/"), id="main-nav"))
+
+    assert 'id="main-nav"' in html
+    assert 'id="main-nav-collapse"' in html
+    assert 'data-bs-target="#main-nav-collapse"' in html

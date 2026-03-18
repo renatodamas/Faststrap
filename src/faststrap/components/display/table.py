@@ -456,3 +456,10 @@ def _table_from_df(
 
 
 Table.from_df = _table_from_df  # type: ignore[attr-defined]
+
+# Optional aliases for projects that mix Faststrap and FastHTML table primitives.
+BsTable = Table
+BsTHead = THead
+BsTBody = TBody
+BsTRow = TRow
+BsTCell = TCell

@@ -2,7 +2,7 @@
 
 from fasthtml.common import to_xml
 
-from faststrap.components.display import Table, TBody, TCell, THead, TRow
+from faststrap.components.display import BsTable, BsTBody, BsTCell, BsTHead, BsTRow, Table, TBody, TCell, THead, TRow
 
 
 class TestTableBasic:
@@ -259,3 +259,19 @@ class TestTableCustomization:
         html = to_xml(table)
         assert 'data-page="1"' in html
         assert 'data-total="100"' in html
+
+
+class TestTableAliases:
+    """Additive aliases for mixed FastHTML/Faststrap imports."""
+
+    def test_bs_table_aliases_render_equivalent_markup(self):
+        table = BsTable(
+            BsTHead(BsTRow(BsTCell("Name", header=True))),
+            BsTBody(BsTRow(BsTCell("Alice"))),
+            striped=True,
+        )
+        html = to_xml(table)
+
+        assert "<table" in html
+        assert "table-striped" in html
+        assert "Alice" in html

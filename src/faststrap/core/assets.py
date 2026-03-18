@@ -6,7 +6,7 @@ Safe for multi-worker servers, thread-safe, with graceful fallbacks.
 from __future__ import annotations
 
 import os
-import sys
+import inspect
 import warnings
 from importlib import metadata as importlib_metadata
 from os import environ
@@ -949,6 +949,7 @@ def mount_assets(
     name: str | None = None,
     priority: bool = True,
     allow_override: bool = False,
+    base_dir: str | os.PathLike[str] | None = None,
 ) -> None:
     """Mount a static files directory to your FastHTML app.
 
@@ -958,7 +959,9 @@ def mount_assets(
     Args:
         app: FastHTML application instance
         directory: Path to directory containing static files.
-                  Can be relative (to calling file) or absolute.
+                  Can be absolute, relative to `base_dir`, relative to the
+                  calling file (when available), or relative to the current
+                  working directory as a final fallback.
         url_path: URL path to mount at (default: "/assets").
                  Must start with "/".
         name: Mount name for Starlette routing.
@@ -968,6 +971,10 @@ def mount_assets(
         allow_override: If True, allow overriding Faststrap's static mount.
                        NOT recommended as it will break Bootstrap CSS/JS loading.
                        (default: False)
+        base_dir: Optional explicit base directory for resolving relative
+                  `directory` paths. When omitted, Faststrap attempts to
+                  resolve relative to the calling file and falls back to the
+                  current working directory.
 
     Raises:
         ValueError: If url_path doesn't start with "/" or conflicts with Faststrap
@@ -1031,17 +1038,7 @@ def mount_assets(
         # Absolute path - use as-is
         assets_path = Path(directory)
     else:
-        # Relative path - resolve relative to calling file
-        # Get the caller's file path from the stack
-        frame = sys._getframe(1)
-        caller_file = frame.f_globals.get("__file__")
-
-        if caller_file:
-            caller_dir = os.path.dirname(os.path.abspath(caller_file))
-            assets_path = Path(caller_dir) / directory
-        else:
-            # Fallback to current working directory
-            assets_path = Path.cwd() / directory
+        assets_path = _resolve_relative_assets_path(directory, base_dir=base_dir)
 
     # Check if directory exists
     if not assets_path.exists():
@@ -1073,3 +1070,30 @@ def mount_assets(
     else:
         # Append to end
         app.routes.append(mount)
+
+
+def _resolve_relative_assets_path(
+    directory: str,
+    *,
+    base_dir: str | os.PathLike[str] | None = None,
+) -> Path:
+    """Resolve a relative assets path without relying on CPython-only frame APIs."""
+    if base_dir is not None:
+        return Path(base_dir) / directory
+
+    module_file = Path(__file__).resolve()
+    current_frame = inspect.currentframe()
+    caller_frame = current_frame.f_back if current_frame is not None else None
+    try:
+        while caller_frame is not None:
+            caller_file = caller_frame.f_globals.get("__file__")
+            if caller_file:
+                resolved_caller = Path(caller_file).resolve()
+                if resolved_caller != module_file:
+                    return resolved_caller.parent / directory
+            caller_frame = caller_frame.f_back
+    finally:
+        del current_frame
+        del caller_frame
+
+    return Path.cwd() / directory

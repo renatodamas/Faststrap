@@ -26,7 +26,8 @@ Here's the simplest way to create a searchable select.
 SearchableSelect(
     endpoint="/api/users/search",
     name="user_id",
-    placeholder="Search users..."
+    placeholder="Search users...",
+    csp_safe=True,
 )
 ```
   </div>
@@ -45,8 +46,10 @@ FormGroup(
     SearchableSelect(
         endpoint="/api/users/search",
         name="assigned_to",
+        select_id="assigned_to",
         placeholder="Search by name or email...",
-        debounce=300
+        debounce=300,
+        csp_safe=True
     ),
     label="Assign To",
     help_text="Start typing to search users"
@@ -77,12 +80,33 @@ def search_users(q: str = ""):
             ),
             href="#",
             cls="list-group-item list-group-item-action",
-            hx_post=f"/select/user/{user.id}",
-            hx_target="#user-selection"
+            data_fs_searchable_option=True,
+            data_fs_select_id="assigned_to",
+            data_fs_input_id="assigned_to-input",
+            data_fs_results_id="assigned_to-results",
+            data_fs_value=user.id,
+            data_fs_label=user.name
         )
         for user in users
     ])
 ```
+
+### CSP-safe mode
+
+For production apps, prefer:
+
+```python
+SearchableSelect(
+    endpoint="/api/search",
+    name="user_id",
+    select_id="user_id",
+    csp_safe=True,
+)
+```
+
+`csp_safe=True` avoids inline click handlers so the component works with a
+strict Content Security Policy. In this mode, server-rendered result links
+should include the `data-fs-*` attributes Faststrap expects.
 
 ### 2. Country/Location Selection
 
@@ -171,6 +195,7 @@ SearchableSelect(
     endpoint="/api/tags/search",
     name="tags",
     placeholder="Search tags...",
+    csp_safe=True,
     initial_options=[
         ("python", "Python"),
         ("javascript", "JavaScript"),
@@ -189,6 +214,7 @@ Adjust search delay for different use cases.
 SearchableSelect(
     endpoint="/api/quick-search",
     name="item",
+    csp_safe=True,
     debounce=150  # 150ms delay
 )
 
@@ -196,6 +222,7 @@ SearchableSelect(
 SearchableSelect(
     endpoint="/api/heavy-search",
     name="item",
+    csp_safe=True,
     debounce=500  # 500ms delay
 )
 ```
@@ -209,7 +236,8 @@ SearchableSelect(
     endpoint="/api/search",
     name="query",
     min_chars=3,  # Require 3+ characters
-    placeholder="Type at least 3 characters..."
+    placeholder="Type at least 3 characters...",
+    csp_safe=True,
 )
 
 @app.get("/api/search")
@@ -315,6 +343,7 @@ def select_item(item_id: int):
 | `debounce` | `int` | 300 | Milliseconds to wait after typing |
 | `min_chars` | `int` | 2 | Minimum characters before searching |
 | `select_id` | `str \| None` | Auto | Unique ID for the select element |
+| `csp_safe` | `bool \| None` | `None` | Recommended production mode that avoids inline JavaScript |
 | `**kwargs` | `Any` | - | Additional HTML attributes |
 
 ---
@@ -337,6 +366,8 @@ if not results:
 # Use debounce to reduce server load
 SearchableSelect(
     endpoint="/api/search",
+    name="item",
+    csp_safe=True,
     debounce=300  # Wait for user to finish typing
 )
 
@@ -358,6 +389,8 @@ def search(q: str):
 
 # Don't search on every keystroke
 SearchableSelect(
+    endpoint="/api/search",
+    name="item",
     debounce=0  # Server overload!
 )
 
@@ -385,8 +418,10 @@ def assign_task_form():
             SearchableSelect(
                 endpoint="/api/users/search",
                 name="assigned_to",
+                select_id="assigned_to",
                 placeholder="Search by name or email...",
-                debounce=300
+                debounce=300,
+                csp_safe=True
             ),
             label="Assign To",
             help_text="Start typing to search users",
@@ -445,7 +480,12 @@ def search_users(q: str = ""):
             ),
             href="#",
             cls="list-group-item list-group-item-action",
-            onclick=f"selectUser({user.id}, '{user.name}')"
+            data_fs_searchable_option=True,
+            data_fs_select_id="assigned_to",
+            data_fs_input_id="assigned_to-input",
+            data_fs_results_id="assigned_to-results",
+            data_fs_value=user.id,
+            data_fs_label=user.name
         )
         for user in users
     ])

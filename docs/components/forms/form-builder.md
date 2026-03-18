@@ -1,11 +1,19 @@
-# Form.from_pydantic (Beta)
+# FormBuilder.from_pydantic (Beta)
 
-`Form.from_pydantic()` generates a Bootstrap-styled form from a Pydantic model.
+`FormBuilder.from_pydantic()` generates a Bootstrap-styled form from a Pydantic model.
+
+!!! info "Naming update in v0.6.1"
+    Starting in Faststrap `v0.6.1`, the preferred import is `FormBuilder` to avoid confusion
+    with FastHTML's native `Form` element.
+
+    - `v0.6.1+`: `from faststrap import FormBuilder`
+    - `v0.6.0 and earlier`: `from faststrap import Form`
+    - `Form` remains available as a compatibility alias, but new code should prefer `FormBuilder`.
 
 ## Import
 
 ```python
-from faststrap import Form
+from faststrap import FormBuilder
 ```
 
 ## Basic Usage
@@ -18,7 +26,7 @@ class Signup(BaseModel):
     age: int
     marketing_opt_in: bool = False
 
-form = Form.from_pydantic(Signup, action="/signup")
+form = FormBuilder.from_pydantic(Signup, action="/signup")
 ```
 
 ## Supported Field Mapping (MVP)
@@ -37,3 +45,13 @@ form = Form.from_pydantic(Signup, action="/signup")
 - `exclude=[...]` remove selected fields
 - `submit_label="Submit"` customize button text
 - `submit_variant="primary"` customize button style
+
+## Backward Compatibility
+
+If you are maintaining a project pinned below `v0.6.1`, this older import still works:
+
+```python
+from faststrap import Form
+
+form = Form.from_pydantic(Signup, action="/signup")
+```

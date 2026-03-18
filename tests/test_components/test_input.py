@@ -70,6 +70,18 @@ def test_input_value():
     assert 'value="john_doe"' in html
 
 
+def test_input_zero_string_value_is_preserved():
+    html = to_xml(Input("count", value="0"))
+
+    assert 'value="0"' in html
+
+
+def test_input_empty_string_value_is_preserved():
+    html = to_xml(Input("field", value=""))
+
+    assert 'value=""' in html
+
+
 def test_input_disabled():
     """Input can be disabled."""
     inp = Input("field", disabled=True)

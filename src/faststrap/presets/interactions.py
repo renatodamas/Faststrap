@@ -390,6 +390,7 @@ def LoadingButton(
     Note:
         The button automatically disables during the request and shows
         a spinner. No custom JavaScript required.
+        Requires HTMX 1.9+ for `hx-disabled-elt`.
     """
     # Build HTMX attributes
     hx_method_attr = f"hx_{method}"
