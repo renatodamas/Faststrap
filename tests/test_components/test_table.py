@@ -2,7 +2,18 @@
 
 from fasthtml.common import to_xml
 
-from faststrap.components.display import BsTable, BsTBody, BsTCell, BsTHead, BsTRow, Table, TBody, TCell, THead, TRow
+from faststrap.components.display import (
+    BsTable,
+    BsTBody,
+    BsTCell,
+    BsTHead,
+    BsTRow,
+    Table,
+    TBody,
+    TCell,
+    THead,
+    TRow,
+)
 
 
 class TestTableBasic:

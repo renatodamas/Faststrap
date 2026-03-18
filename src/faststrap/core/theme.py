@@ -165,7 +165,7 @@ _BUILTIN_THEMES: dict[str, dict[str, str]] = {
         "--bs-success-rgb": "40, 167, 69",
     },
 }
-_BUILTIN_THEME_CACHE: dict[str, "Theme"] = {}
+_BUILTIN_THEME_CACHE: dict[str, Theme] = {}
 
 # ============================================================================
 # Light/Dark Mode CSS Variable Definitions

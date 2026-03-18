@@ -171,8 +171,12 @@ def InfiniteScroll(
             hx_attrs["hx_trigger"] = f"intersect once threshold:{normalized_threshold}"
         else:
             hx_attrs["hx_trigger"] = "faststrap:infinite-scroll once"
+            existing_data = kwargs.get("data")
+            data_attrs: dict[str, Any] = {}
+            if isinstance(existing_data, dict):
+                data_attrs.update(existing_data)
             kwargs["data"] = {
-                **(kwargs.get("data") if isinstance(kwargs.get("data"), dict) else {}),
+                **data_attrs,
                 "fs_infinite_scroll": True,
                 "fs_infinite_margin": normalized_threshold,
             }

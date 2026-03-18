@@ -16,7 +16,6 @@ from ...core.theme import resolve_defaults
 from ...core.types import SizeType
 from ...utils.attrs import convert_attrs
 
-
 _SEARCHABLE_SELECT_DEFAULT_WARNED = False
 
 

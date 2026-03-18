@@ -64,8 +64,8 @@ def test_export_button_repeats_multi_value_params_for_get_and_post():
         )
     )
 
-    assert 'team=ops' in get_html
-    assert 'team=eng' in get_html
+    assert "team=ops" in get_html
+    assert "team=eng" in get_html
     assert "['ops', 'eng']" not in get_html
     assert post_html.count('name="team"') == 2
     assert "['ops', 'eng']" not in post_html

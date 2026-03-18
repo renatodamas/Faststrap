@@ -5,13 +5,13 @@ from __future__ import annotations
 import hashlib
 import json
 import math
-from typing import Any, Literal
+from typing import Any, Literal, cast
 from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
 from fasthtml.common import A, Div, Form, Input, Li, Nav, Span, Ul
 
-from ...core._stability import beta
 from ...core._ids import uniquify_id
+from ...core._stability import beta
 from ...core.base import merge_classes
 from ...core.registry import register
 from ...core.theme import resolve_defaults
@@ -20,6 +20,7 @@ from .table import Table, TBody, TCell, THead, TRow, _normalize_table_data
 
 SortableDirection = Literal["asc", "desc"]
 ResponsiveType = Literal["sm", "md", "lg", "xl", "xxl"]
+
 
 def _stable_table_id(
     *,
@@ -298,9 +299,10 @@ def DataTable(
     if sort not in sortable_columns:
         sort = None
     elif endpoint is None:
+        active_sort = cast(str, sort)
         indexed_records = list(enumerate(records))
         indexed_records.sort(
-            key=lambda item: _sort_key(item[1].get(sort)),
+            key=lambda item: _sort_key(item[1].get(active_sort)),
             reverse=c_direction == "desc",
         )
         records = [record for _, record in indexed_records]
@@ -382,7 +384,9 @@ def DataTable(
                 ),
             )
             aria_sort = (
-                "ascending" if current and c_direction == "asc" else "descending" if current else None
+                "ascending"
+                if current and c_direction == "asc"
+                else "descending" if current else None
             )
             head_cells.append(TCell(link, header=True, scope="col", aria_sort=aria_sort))
         else:
@@ -465,7 +469,9 @@ def DataTable(
             if normalized is None or str(key) == search_param:
                 continue
             if isinstance(normalized, list):
-                hidden_inputs.extend(Input(type="hidden", name=str(key), value=item) for item in normalized)
+                hidden_inputs.extend(
+                    Input(type="hidden", name=str(key), value=item) for item in normalized
+                )
             else:
                 hidden_inputs.append(Input(type="hidden", name=str(key), value=normalized))
 

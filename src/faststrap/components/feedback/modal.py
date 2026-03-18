@@ -16,6 +16,7 @@ from ...core.types import ModalSizeType
 from ...utils.attrs import convert_attrs
 from ..forms.button import CloseButton
 
+
 def _stable_modal_id(
     children: tuple[Any, ...],
     *,

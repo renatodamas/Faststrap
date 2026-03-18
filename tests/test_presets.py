@@ -42,12 +42,8 @@ def test_infinite_scroll():
 
 
 def test_infinite_scroll_threshold_modes():
-    numeric_html = to_xml(
-        InfiniteScroll(endpoint="/feed?page=2", target="#feed", threshold="0.5")
-    )
-    margin_html = to_xml(
-        InfiniteScroll(endpoint="/feed?page=2", target="#feed", threshold="200px")
-    )
+    numeric_html = to_xml(InfiniteScroll(endpoint="/feed?page=2", target="#feed", threshold="0.5"))
+    margin_html = to_xml(InfiniteScroll(endpoint="/feed?page=2", target="#feed", threshold="200px"))
 
     assert 'hx-trigger="intersect once threshold:0.5"' in numeric_html
     assert 'hx-trigger="faststrap:infinite-scroll once"' in margin_html
